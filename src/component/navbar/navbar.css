@@ -1,0 +1,187 @@
+.bg-dark-new {
+    /* background: linear-gradient(90deg, #6573db, #004596) !important; */
+    background: linear-gradient(90deg, var(--navy-dark), var(--navy-light));
+}
+
+.notification-count {
+    position: absolute;
+    top: -1px;
+    /* Adjust as needed */
+    right: -10px;
+    /* Adjust as needed */
+    background-color: rgb(230 10 70);
+    color: white;
+    border-radius: 50%;
+    padding: 3px 5px;
+    font-size: 14px;
+    line-height: 1;
+    text-align: center;
+}
+
+.dropdown-menu-notification {
+    cursor: pointer !important;
+    max-height: 350;
+    overflow-y: auto;
+    overflow-x: hidden;
+    white-space: nowrap;
+    right: -22px !important;
+    /* Move 1px to the left */
+    top: 100%;
+    max-width: 90vw;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+@media (min-width: 992px) {
+    .navbar .nav-item .dropdown-menu {
+        display: block;
+        border: none;
+        margin-top: 0;
+        top: 150%;
+        opacity: 0;
+        visibility: hidden;
+        transition: .5s;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .navbar .nav-item:hover .dropdown-menu {
+        top: 100%;
+        visibility: visible;
+        transition: .5s;
+        opacity: 1;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+}
+
+.i-name {
+    color: white;
+    transition: color 1.5s ease;
+}
+
+.nav-item:hover .i-name {
+    color: white;
+    transition: color 0.3s ease;
+}
+
+.ms-name {
+    color: rgb(255, 255, 255);
+    transition: color 1.5s ease;
+}
+
+.nav-item:hover .ms-name {
+    color: #ebef04;
+    transition: color 1.5s ease;
+}
+
+.nav-animate {
+    color: white !important;
+}
+
+.login-name {
+    color: #fffe76 !important;
+}
+
+.nav-animate::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background-color: #ffffff;
+    color: #ffffff;
+    opacity: 0;
+    transition: opacity 0.5s ease, width 1s ease-out;
+}
+
+.nav-animate:hover::after {
+    opacity: 1;
+    width: 100%;
+}
+
+.nav-animate:hover {
+    padding-left: 10px;
+}
+
+.dropdown-item:hover {
+    background-color: #db8f01 !important;
+    transition: background-color 0.3s ease !important;
+    color: white !important;
+}
+
+.navbar-nav .nav-link .arrow-down {
+    transition: transform 0.3s ease;
+}
+
+.navbar-nav .nav-item:hover .arrow-down {
+    transform: rotate(180deg);
+}
+
+.dropdown {
+    margin-right: 15px;
+    font-size: 17px;
+}
+
+@keyframes slideIn {
+    0% {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.icon-name {
+    font-size: 20px;
+    margin-bottom: 5px;
+    margin-right: 5px;
+}
+
+
+.cursor-pointer {
+    cursor: pointer !important;
+}
+
+.neon-text {
+    font-size: 2rem;
+    color: #fff;
+    text-shadow: 0 0 5px #ff005e, 0 0 10px #ff005e, 0 0 20px #ff005e, 0 0 40px #ff005e, 0 0 80px #ff005e;
+    animation: glow 1.5s infinite alternate;
+}
+
+@keyframes glow {
+    0% {
+        text-shadow: 0 0 5px #ff005e, 0 0 10px #ff005e, 0 0 20px #ff005e, 0 0 40px #ff005e, 0 0 80px #ff005e;
+    }
+
+    100% {
+        text-shadow: 0 0 10px #00d4ff, 0 0 20px #00d4ff, 0 0 40px #00d4ff, 0 0 80px #00d4ff, 0 0 160px #00d4ff;
+    }
+}
+
+.download-btn {
+    background: linear-gradient(135deg, #6366f1, #3b82f6);
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+}
+
+.download-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.45);
+}
+
+.download-btn:active {
+    transform: scale(0.97);
+}

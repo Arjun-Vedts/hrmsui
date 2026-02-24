@@ -1,0 +1,703 @@
+import { ErrorMessage, Field, Form, Formik } from "formik";
+import Navbar from "../navbar/Navbar";
+import DatePicker from "react-datepicker";
+import Select from "react-select";
+import { useEffect, useRef, useState } from "react";
+import { addProgram, addRequisitionData, getAgencies, getPrograms, getRequisitionById, reqFileDownload, updateRequisitionData } from "../../service/training.service";
+import Swal from "sweetalert2";
+import { getEmployees, handleApiError } from "../../service/master.service";
+import { useLocation, useNavigate } from "react-router-dom";
+import * as Yup from "yup";
+import { format } from "date-fns";
+import AlertConfirmation from "../../common/AlertConfirmation.component";
+import { FaCheckCircle } from "react-icons/fa";
+import { BsFileEarmark } from "react-icons/bs";
+
+
+const AddEditRequisition = () => {
+
+    const navigate = useNavigate();
+    const location = useLocation();
+    const requisitionId = location.state?.requisitionId;
+
+    const [agencyList, setAgencyList] = useState([]);
+    const [programList, setProgramList] = useState([]);
+    const [employeeList, setEmployeeList] = useState([]);
+    const [showProgramModal, setShowProgramModal] = useState(false);
+    const [newProgramId, setNewProgramId] = useState(null);
+    const formikRef = useRef(null);
+    const roleName = localStorage.getItem("roleName");
+    const empId = localStorage.getItem("empId");
+    const [existingFiles, setExistingFiles] = useState({});
+
+
+    const [initialValues, setInitialValues] = useState({
+        programId: "",
+        fromDate: null,
+        toDate: null,
+        duration: "",
+        reference: "",
+        organizedBy: "",
+        modeOfPayment: "Only through ECS",
+        initiatingOfficer: Number(empId) || "",
+        isSubmitted: "N",
+        necessity: "",
+        multipartFileEcs: null,
+        multipartFileCheque: null,
+        multipartFilePan: null,
+        multipartFileBrochure: null,
+    });
+
+    useEffect(() => {
+        fetchAgencies();
+        fetchPrograms();
+        fetchEmployees();
+    }, []);
+
+    const fetchAgencies = async () => {
+        try {
+            const response = await getAgencies();
+            setAgencyList(response?.data || []);
+        } catch (error) {
+            console.error("Error fetching agencies:", error);
+            Swal.fire("Error", "Failed to fetch agency data. Please try again later.", "error");
+        }
+    };
+
+    const fetchPrograms = async () => {
+        try {
+            const response = await getPrograms();
+            setProgramList(response?.data || []);
+        } catch (error) {
+            console.error("Error fetching programs:", error);
+            Swal.fire("Error", "Failed to fetch program data. Please try again later.", "error");
+        }
+    };
+
+    const fetchEmployees = async () => {
+        try {
+            const response = await getEmployees(empId, roleName);
+            setEmployeeList(response?.data || []);
+        } catch (error) {
+            console.error("Error fetching employees:", error);
+            Swal.fire("Error", "Failed to fetch employee data. Please try again later.", "error");
+        }
+    };
+
+    useEffect(() => {
+        if (requisitionId) {
+            fetchRequisitionById(requisitionId);
+        }
+    }, [requisitionId]);
+
+    const fetchRequisitionById = async (id) => {
+        try {
+            const response = await getRequisitionById(id);
+            if (response && response.data) {
+                const data = response.data;
+                setInitialValues({
+                    programId: data.programId || "",
+                    fromDate: data.fromDate ? new Date(data.fromDate) : null,
+                    toDate: data.toDate ? new Date(data.toDate) : null,
+                    duration: data.duration || "",
+                    reference: data.reference || "",
+                    organizedBy: data.organizer || "",
+                    modeOfPayment: data.modeOfPayment || "Only through ECS",
+                    initiatingOfficer: data.initiatingOfficer || "",
+                    isSubmitted: data.isSubmitted || "N",
+                    necessity: data.necessity || "",
+                    multipartFileEcs: null,
+                    multipartFileCheque: null,
+                    multipartFilePan: null,
+                    multipartFileBrochure: null,
+                });
+                setExistingFiles({
+                    multipartFileEcs: data.fileEcs ? { name: data.fileEcs } : null,
+                    multipartFileCheque: data.fileCheque ? { name: data.fileCheque } : null,
+                    multipartFilePan: data.filePan ? { name: data.filePan } : null,
+                    multipartFileBrochure: data.fileBrochure ? { name: data.fileBrochure } : null,
+                });
+            } else {
+                Swal.fire("Error", "Failed to fetch requisition details. Please try again later.", "error");
+            }
+        } catch (error) {
+            console.error("Error fetching requisition details:", error);
+            Swal.fire("Error", "Failed to fetch requisition details. Please try again later.", "error");
+        }
+    };
+
+    const handleBack = () => {
+        navigate("/requisition");
+    };
+
+    const handleDownload = async (reqId,file) => {
+
+        let response = await reqFileDownload(reqId,file);
+
+        const { data, fileName, contentType } = response;
+
+        if (data === '0') {
+            Swal.fire("Error", "File not found", "error");
+            return;
+        }
+
+        const blob = new Blob([data], { type: contentType });
+
+        if (contentType === "application/pdf") {
+            const url = window.URL.createObjectURL(blob);
+            window.open(url, "_blank");
+        } else {
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        }
+    };
+
+    const agencyOptions = agencyList.map(data => ({
+        value: data?.organizerId,
+        label: data?.organizer
+    }));
+
+    const employeeOptions = employeeList.map(data => ({
+        value: data?.empId,
+        label: ((data.title || "") + ' ' + data.empName + ", " + (data.empDesigName || "")).trim(),
+    }));
+
+    const programOptions = [
+        { value: 0, label: "Add New", data: null },
+        ...programList.map((item) => ({
+            value: item.programId,
+            label: item.programName,
+            data: item
+        }))
+    ];
+
+    const SUPPORTED_FORMATS = [
+        "application/pdf",
+        "image/jpg",
+        "image/jpeg",
+        "image/png"
+    ];
+    const FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    const fileValidation = (fieldName) =>
+        Yup.mixed()
+            .required(`${fieldName} is required`)
+            .test("fileSize", "File size must be less than 10MB", (value) => {
+                return value && value.size <= FILE_SIZE;
+            })
+            .test("fileFormat", "Only PDF or Image files are allowed", (value) => {
+                return value && SUPPORTED_FORMATS.includes(value.type);
+            });
+
+    const validationSchema = Yup.object().shape({
+        programId: Yup.string().required("Program is required"),
+        fromDate: Yup.date().required("From Date is required"),
+        toDate: Yup.date()
+            .required("To Date is required")
+            .min(Yup.ref("fromDate"), "To Date must be after From Date"),
+        organizedBy: Yup.string().required("Organized By is required"),
+        modeOfPayment: Yup.string().required("Payment Mode is required"),
+        initiatingOfficer: Yup.string().required("Initiating Officer is required"),
+        necessity: Yup.string().required("Necessity of course is required"),
+        multipartFileEcs: fileValidation("ECS file"),
+        multipartFileCheque: fileValidation("Blank cancelled cheque file"),
+        multipartFilePan: fileValidation("PAN card file"),
+        multipartFileBrochure: fileValidation("Brochure file"),
+    });
+
+    const programSchema = Yup.object().shape({
+        programName: Yup.string().required("Program Name is required"),
+        organizedBy: Yup.string().required("Organized By is required"),
+        fromDate: Yup.date().required("From Date is required"),
+        toDate: Yup.date()
+            .required("To Date is required")
+            .min(Yup.ref("fromDate"), "To Date must be after From Date"),
+    });
+
+    const handleProgramSubmit = async (values, { resetForm, setSubmitting }) => {
+        try {
+            const dto = {
+                agencyId: values.organizedBy,
+                programName: values.programName,
+                fromDate: format(values.fromDate, "yyyy-MM-dd"),
+                toDate: format(values.toDate, "yyyy-MM-dd"),
+            }
+
+            const confirm = await AlertConfirmation({ title: "Are you sure!", message: '' });
+            if (!confirm) {
+                return;
+            }
+            const response = await addProgram(dto);
+            if (response && response.success) {
+                const createdId = response.data.programId;
+                setShowProgramModal(false);
+                resetForm();
+                setNewProgramId(createdId);
+                fetchPrograms();
+            } else {
+                Swal.fire("Warning", response.message, "warning");
+            }
+        } catch (error) {
+            Swal.fire("Warning", handleApiError(error), "warning");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    useEffect(() => {
+        if (newProgramId && programList.length > 0 && formikRef.current) {
+            const selectedProgram = programList.find(
+                item => item.programId === newProgramId
+            );
+            if (selectedProgram) {
+                handleChaneProgram({
+                    value: selectedProgram.programId,
+                    label: selectedProgram.programName,
+                    data: selectedProgram
+                });
+                setNewProgramId(null);
+            }
+        }
+    }, [programList, newProgramId]);
+
+    const handleChaneProgram = (selected) => {
+
+        const { setFieldValue } = formikRef.current;
+
+        if (!selected) return;
+
+        // If Add New clicked
+        if (selected.value === 0) {
+            setShowProgramModal(true);
+            return;
+        }
+
+        const programData = selected.data;
+
+        if (!programData) return;
+
+        const newOrgData = agencyList.find(
+            item => item.organizerId === programData.organizerId
+        );
+
+        const fromDate = new Date(programData.fromDate);
+        const toDate = new Date(programData.toDate);
+
+        setFieldValue("programId", selected.value);
+        setFieldValue("fromDate", fromDate);
+        setFieldValue("toDate", toDate);
+        setFieldValue("organizedBy", newOrgData ? newOrgData.organizer : "");
+
+        calculateDuration(fromDate, toDate, setFieldValue);
+    };
+
+    const calculateDuration = (fromDate, toDate, setFieldValue) => {
+        if (fromDate && toDate) {
+            const diffTime = new Date(toDate) - new Date(fromDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+            if (diffDays >= 0) {
+                setFieldValue("duration", diffDays);
+            } else {
+                setFieldValue("duration", "");
+            }
+        }
+    };
+
+    const handleSubmit = async (values, { resetForm, setSubmitting }) => {
+        try {
+            const dto = {
+                ...values,
+                fromDate: format(values.fromDate, "yyyy-MM-dd"),
+                toDate: format(values.toDate, "yyyy-MM-dd"),
+                requisitionId: requisitionId || null,
+            }
+
+            const confirm = await AlertConfirmation({ title: "Are you sure!", message: '' });
+            if (!confirm) {
+                return;
+            }
+            const response = requisitionId ? await updateRequisitionData(dto) : await addRequisitionData(dto);
+            if (response && response.success) {
+                Swal.fire("Success", response.message, "success");
+                resetForm();
+                navigate("/requisition");
+            } else {
+                Swal.fire("Warning", response.message, "warning");
+            }
+        } catch (error) {
+            Swal.fire("Warning", handleApiError(error), "warning");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return (
+        <div>
+            <Navbar />
+
+            <h3 className="fancy-heading mt-3">
+                {requisitionId ? "Edit Requisition" : "Add Requisition"}
+                <span className="underline-glow">
+                    <span className="pulse-dot"></span>
+                    <span className="pulse-dot"></span>
+                    <span className="pulse-dot"></span>
+                </span>
+            </h3>
+
+            <div className="p-5">
+                <div className="card p-3 mt-3 shadow-sm border-rounded">
+                    <Formik
+                        innerRef={formikRef}
+                        initialValues={initialValues}
+                        validationSchema={validationSchema}
+                        enableReinitialize
+                        onSubmit={handleSubmit}
+                    >
+                        {({ values, setFieldValue, isSubmitting , setFieldTouched}) => (
+                            <Form autoComplete="off">
+                                <div className="row g-3 custom-modal-body p-3">
+
+                                    <div className="col-md-3">
+                                        <label className="form-label">Program</label>
+                                        <div className="text-start">
+                                            <Select
+                                                options={programOptions}
+                                                value={programOptions.find((item) => item.value === values.programId) || null}
+                                                placeholder="Select Program"
+                                                isSearchable
+                                                onChange={(selected) => handleChaneProgram(selected)}
+                                            />
+                                        </div>
+                                        <ErrorMessage name="programId" component="div" className="invalid-msg" />
+                                    </div>
+
+                                    <div className="col-md-2">
+                                        <label className="form-label">From Date</label>
+                                        <DatePicker
+                                            id="fromDate"
+                                            name="fromDate"
+                                            selected={values.fromDate}
+                                            onChange={(date) => {
+                                                setFieldValue("fromDate", date);
+                                                calculateDuration(date, values.toDate, setFieldValue);
+                                            }}
+                                            className="form-control"
+                                            placeholderText="Choose Date"
+                                            dateFormat="dd-MM-yyyy"
+                                            showYearDropdown
+                                            showMonthDropdown
+                                            dropdownMode="select"
+                                            maxDate={new Date()}
+                                            onKeyDown={(event) => event.preventDefault()}
+                                        />
+                                        <ErrorMessage name="fromDate" component="div" className="text-danger small" />
+                                    </div>
+
+                                    <div className="col-md-2">
+                                        <label className="form-label">To Date</label>
+                                        <DatePicker
+                                            id="toDate"
+                                            name="toDate"
+                                            selected={values.toDate}
+                                            onChange={(date) => {
+                                                setFieldValue("toDate", date);
+                                                calculateDuration(values.fromDate, date, setFieldValue);
+                                            }}
+                                            className="form-control"
+                                            placeholderText="Choose Date"
+                                            dateFormat="dd-MM-yyyy"
+                                            showYearDropdown
+                                            showMonthDropdown
+                                            dropdownMode="select"
+                                            maxDate={new Date()}
+                                            onKeyDown={(event) => event.preventDefault()}
+                                        />
+                                        <ErrorMessage name="toDate" component="div" className="text-danger small" />
+                                    </div>
+
+                                    <div className="col-md-1">
+                                        <label className="form-label">Duration</label>
+                                        <Field name="duration" type="text" className="form-control" placeholder="In Days" disabled />
+                                        <ErrorMessage name="duration" component="div" className="invalid-msg" />
+                                    </div>
+
+                                    <div className="col-md-2">
+                                        <label className="form-label">Organized By</label>
+                                        <Field name="organizedBy" type="text" className="form-control" disabled />
+                                        <ErrorMessage name="organizedBy" component="div" className="invalid-msg" />
+                                    </div>
+
+                                    <div className="col-md-2">
+                                        <label className="form-label">Reference</label>
+                                        <Field name="reference" type="text" className="form-control" />
+                                        <ErrorMessage name="reference" component="div" className="invalid-msg" />
+                                    </div>
+
+                                    <div className="col-md-2">
+                                        <label className="form-label">Payment Mode</label>
+                                        <Field name="modeOfPayment" type="text" className="form-control" />
+                                        <ErrorMessage name="modeOfPayment" component="div" className="invalid-msg" />
+                                    </div>
+
+                                    <div className="col-md-3">
+                                        <label className="form-label">Initiating Officer</label>
+                                        <Select
+                                            options={employeeOptions}
+                                            value={employeeOptions.find((item) => item.value === Number(values.initiatingOfficer)) || null}
+                                            onChange={(option) => setFieldValue("initiatingOfficer", option ? option.value : "")}
+                                            placeholder="Select Officer"
+                                            isSearchable
+                                        />
+                                        <ErrorMessage name="initiatingOfficer" component="div" className="invalid-msg" />
+                                    </div>
+
+                                    <div className="col-md-6 mt-5">
+                                        <span className="form-label me-3">
+                                            Feedback / Impact forms / Participation certificate of previous course submitted
+                                        </span>
+
+                                        <div className="btn-group bg-light rounded-pill border" role="group">
+                                            <button
+                                                type="button"
+                                                className={`btn rounded-pill px-4 py-2 transition-all ${values.isSubmitted === "Y" ? "btn-success shadow-sm" : "btn-light text-muted"
+                                                    }`}
+                                                onClick={() => setFieldValue("isSubmitted", "Y")}
+                                            >
+                                                Yes
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                className={`btn rounded-pill px-4 py-2 transition-all ${values.isSubmitted === "N" ? "btn-danger shadow-sm" : "btn-light text-muted"
+                                                    }`}
+                                                onClick={() => setFieldValue("isSubmitted", "N")}
+                                            >
+                                                No
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="col-md-12">
+                                        <label className="form-label">Necessity of course and benefits</label>
+                                        <Field name="necessity" as="textarea" rows={3} className="form-control" />
+                                        <ErrorMessage name="necessity" component="div" className="invalid-msg" />
+                                    </div>
+
+                                </div>
+
+                                <div className="row mt-3">
+                                    <h6 className="text-start ms-3 text-primary">Mandatory Enclosures to be Attach</h6>
+
+                                    <div className="row ms-2 mt-2 text-start">
+                                        {[
+                                            { label: "1. ECS", name: "multipartFileEcs" },
+                                            { label: "2. Blank cancelled cheque (Photo copy)", name: "multipartFileCheque" },
+                                            { label: "3. PAN card (Photo copy)", name: "multipartFilePan" },
+                                            { label: "4. Brochure", name: "multipartFileBrochure" }
+                                        ].map((item, index) => (
+                                            <div className="col-md-3 mb-3" key={index}>
+                                                <label className="form-label small fw-medium text-secondary">
+                                                    {item.label}
+                                                </label>
+
+                                                <div className="border rounded p-2 bg-light">
+
+                                                    {/* Existing File (Edit Mode) */}
+                                                    {requisitionId && existingFiles[item.name] && !values[item.name] && (
+                                                        <div className="d-flex justify-content-between align-items-center mb-2">
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-link text-primary p-0 small text-decoration-none"
+                                                                onClick={() => handleDownload(requisitionId,existingFiles[item.name].name)}
+                                                            >
+                                                                <BsFileEarmark className="me-1 mb-1" />
+                                                                {existingFiles[item.name].name}
+                                                            </button>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Newly Selected File */}
+                                                    {values[item.name] && (
+                                                        <div className="small text-success mb-2">
+                                                            <FaCheckCircle className="me-1" />
+                                                            {values[item.name].name}
+                                                        </div>
+                                                    )}
+
+                                                    {/* File Input */}
+                                                    <input
+                                                        type="file"
+                                                        className="form-control form-control-sm"
+                                                        accept=".pdf,.jpg,.jpeg,.png"
+                                                        onChange={(event) => {
+                                                            const file = event.currentTarget.files?.[0] || null;
+                                                            setFieldValue(item.name, file);
+                                                        }}
+                                                        onBlur={() => setFieldTouched(item.name, true)}
+                                                        onClick={(e) => (e.target.value = null)}
+                                                    />
+
+                                                </div>
+
+                                                <ErrorMessage name={item.name} component="div" className="invalid-msg" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="text-center mt-4">
+                                    <button type="submit"
+                                        className={requisitionId ? `update` : `submit`}
+                                        disabled={isSubmitting}
+                                    >
+                                        {requisitionId ? `update` : `submit`}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="back"
+                                        onClick={handleBack}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+
+                                <div className="text-start">
+                                    <span className="text-muted small">
+                                        Note: After submission, the requisition will be sent for approval. You can track the status in the requisition list.
+                                    </span>
+                                </div>
+
+                            </Form>
+                        )}
+                    </Formik>
+                </div>
+            </div>
+
+            {showProgramModal && (
+                <>
+                    <div className="modal-backdrop show custom-backdrop" onClick={() => setShowProgramModal(false)}></div>
+                    <div className="modal fade show d-block" tabIndex="-1">
+                        <div className="modal-dialog modal-lg">
+                            <div className="modal-content">
+
+                                <div className="modal-header custom-modal-header">
+                                    <h5 className="modal-title">Add New Program</h5>
+                                    <button
+                                        type="button"
+                                        className="btn-close"
+                                        onClick={() => setShowProgramModal(false)}
+                                    ></button>
+                                </div>
+
+                                <div className="modal-body custom-modal-body">
+
+                                    <Formik
+                                        initialValues={{
+                                            programName: "",
+                                            organizedBy: "",
+                                            fromDate: null,
+                                            toDate: null,
+                                        }}
+                                        validationSchema={programSchema}
+                                        onSubmit={handleProgramSubmit}
+                                    >
+                                        {({ setFieldValue, values }) => (
+                                            <Form autoComplete="off">
+
+                                                <div className="row text-start">
+
+                                                    <div className="col-md-6 mb-3">
+                                                        <label className="form-label">Program Name</label>
+                                                        <Field
+                                                            name="programName"
+                                                            className="form-control"
+                                                        />
+                                                        <ErrorMessage name="programName" component="div" className="invalid-msg" />
+                                                    </div>
+
+                                                    <div className="col-md-6 mb-3">
+                                                        <label className="form-label">Organized By</label>
+                                                        <Select
+                                                            options={agencyOptions}
+                                                            value={agencyOptions.find((item) => item.value === Number(values.organizedBy)) || null}
+                                                            onChange={(option) => setFieldValue("organizedBy", option ? option.value : "")}
+                                                            placeholder="Select Organize"
+                                                            isSearchable
+                                                        />
+                                                        <ErrorMessage name="organizedBy" component="div" className="invalid-msg" />
+                                                    </div>
+
+                                                    <div className="col-md-6 mb-3">
+                                                        <label className="form-label">From Date</label>
+                                                        <DatePicker
+                                                            selected={values.fromDate}
+                                                            onChange={(date) =>
+                                                                setFieldValue("fromDate", date)
+                                                            }
+                                                            className="form-control"
+                                                            dateFormat="dd-MM-yyyy"
+                                                            showYearDropdown
+                                                            showMonthDropdown
+                                                            dropdownMode="select"
+                                                            maxDate={new Date()}
+                                                            onKeyDown={(event) => event.preventDefault()}
+                                                        />
+                                                        <ErrorMessage name="fromDate" component="div" className="invalid-msg" />
+                                                    </div>
+
+                                                    <div className="col-md-6 mb-3">
+                                                        <label className="form-label">To Date</label>
+                                                        <DatePicker
+                                                            selected={values.toDate}
+                                                            onChange={(date) =>
+                                                                setFieldValue("toDate", date)
+                                                            }
+                                                            className="form-control"
+                                                            dateFormat="dd-MM-yyyy"
+                                                            minDate={values.fromDate}
+                                                            showYearDropdown
+                                                            showMonthDropdown
+                                                            dropdownMode="select"
+                                                            maxDate={new Date()}
+                                                            onKeyDown={(event) => event.preventDefault()}
+                                                        />
+                                                        <ErrorMessage name="toDate" component="div" className="invalid-msg" />
+                                                    </div>
+
+                                                </div>
+
+                                                <div className="text-center mt-2 mb-4">
+                                                    <button type="submit" className="submit">
+                                                        Submit
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="back"
+                                                        onClick={() => setShowProgramModal(false)}
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+
+                                            </Form>
+                                        )}
+                                    </Formik>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+
+        </div>
+    );
+};
+
+export default AddEditRequisition;

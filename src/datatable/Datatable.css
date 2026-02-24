@@ -1,0 +1,368 @@
+/* .datatable-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table thead {
+    line-height: 1.8;
+
+}
+
+.table th {
+    text-align: center;
+    font-weight: 500;
+    border-bottom: 2px solid #dee2e6;
+    background-color: #0f71e0;
+    color: #ffffff;
+    cursor: pointer;
+    padding: .2rem .2rem !important;
+}
+
+.table td {
+    vertical-align: middle;
+    line-height: 1.5;
+}
+
+.table td.access-cell {
+    padding: 0 !important;
+}
+
+.sortable-column {
+    position: relative;
+    padding-right: 20px;
+}
+
+.sort-icon {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #ffffff;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+
+.sort-icon.asc {
+    border-top: none;
+    border-bottom: 5px solid #ffffff;
+}
+
+.search-bar {
+    width: 200px;
+}
+
+.btn {
+    min-width: 40px;
+    text-align: center;
+}
+
+.justify-content-end {
+    margin-right: 0%;
+}
+
+.inner-table-width {
+    margin-left: 3% !important;
+    margin-right: 3% !important;
+}
+
+.inner-sub-table-th {
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 2px solid #dee2e6;
+    background-color: #0f71e0 !important;
+    color: #ffffff;
+    cursor: pointer;
+    padding: .2rem .2rem !important;
+}
+
+.dataTableBorderedRow {
+    border: 1px solid #ccc;
+} */
+
+/* ====== MAIN CONTAINER ====== */
+.datatable-container {
+    width: 100%;
+    overflow-x: auto;
+    padding: 0.5rem;
+}
+
+/* ====== TABLE BASE ====== */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.table thead {
+    line-height: 1.8;
+}
+
+.table th {
+    text-align: center;
+    font-weight: 500;
+    border-bottom: 2px solid #dee2e6;
+    background-color: #115cb2;
+    color: #ffffff;
+    cursor: pointer;
+    padding: 0.4rem;
+    white-space: nowrap;
+}
+
+.table td {
+    vertical-align: middle;
+    line-height: 1.5;
+    text-align: left;
+    padding: 0.4rem;
+    word-break: break-word;
+}
+
+/* Zebra Row Effect */
+.table tbody tr:nth-child(even) {
+    background-color: #f8f8f8;
+}
+
+/* ====== SORTING ====== */
+.sortable-column {
+    position: relative;
+    padding-right: 20px;
+}
+
+.sort-icon {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #ffffff;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+
+.sort-icon.asc {
+    border-top: none;
+    border-bottom: 5px solid #ffffff;
+}
+
+/* ====== SEARCH & FILTER ====== */
+.search-bar {
+    width: 200px;
+    transition: all 0.3s ease;
+}
+
+.search-bar:focus {
+    width: 240px;
+    outline: none;
+    box-shadow: 0 0 4px rgba(134, 114, 23, 0.5);
+}
+
+/* ====== BUTTONS & PAGINATION ====== */
+.btn {
+    min-width: 40px;
+    text-align: center;
+}
+
+.btn-active-page-no {
+    background-color: #0f71e0 !important;
+    color: white !important;
+    border-color: #0f71e0 !important;
+}
+
+.pagination-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* ====== INNER TABLE ====== */
+.inner-table-width {
+    margin: 0 3%;
+    overflow-x: auto;
+}
+
+.inner-sub-table-th {
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 2px solid #dee2e6;
+    background-color: #0f71e0 !important;
+    color: #ffffff;
+    padding: 0.4rem;
+    white-space: nowrap;
+}
+
+.dataTableBorderedRow {
+    border: 1px solid #ccc;
+}
+
+/* ====== RESPONSIVE DESIGN ====== */
+
+/* Small devices (≤576px) */
+@media (max-width: 576px) {
+    .datatable-container {
+        padding: 0.2rem;
+    }
+
+    .table {
+        font-size: 0.5rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.5rem;
+    }
+
+    .pagination-buttons {
+        justify-content: center;
+    }
+
+    .inner-table-width {
+        margin: 0;
+    }
+
+    .cs-entries {
+        font-size: small;
+    }
+
+    .table td button {
+        font-size: 0.60rem;
+    }
+}
+
+/* Medium devices (577px - 992px) */
+@media (min-width: 577px) and (max-width: 992px) {
+    .datatable-container {
+        padding: 0.5rem;
+    }
+
+    .search-bar {
+        width: 180px;
+    }
+
+    .table {
+        font-size: 0.85rem;
+    }
+}
+
+/* Large screens (≥1200px) */
+@media (min-width: 1200px) {
+    .datatable-container {
+        max-width: 100%;
+        margin: auto;
+    }
+
+    .table {
+        font-size: 1rem;
+    }
+
+    .search-bar {
+        width: 250px;
+    }
+}
+
+/* ====== MAIN TABLE ROWS ====== */
+.main-row {
+    transition: background-color 0.3s ease;
+}
+
+.main-row.even-row {
+    background-color: #ffffff;
+}
+
+.main-row.odd-row {
+    background-color: #f2f2f2;
+}
+
+.main-row.custom-bg {
+    background-color: var(--custom-row-bg, inherit);
+}
+
+/* ====== MAIN TABLE CELLS ====== */
+.table-cell {
+    padding: 0.4rem;
+    vertical-align: middle;
+    word-break: break-word;
+}
+
+.table-cell.custom-column-bg {
+    background-color: var(--custom-column-bg, inherit);
+}
+
+.table-cell.text-center {
+    text-align: center;
+}
+
+.table-cell.text-right {
+    text-align: right;
+}
+
+.table-cell.text-left {
+    text-align: left;
+}
+
+/* ====== INNER TABLE STRUCTURE ====== */
+.inner-table-container {
+    margin: 0 3%;
+    overflow-x: auto;
+}
+
+.inner-sub-table-header th {
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 2px solid #dee2e6;
+    background-color: #0f71e0 !important;
+    color: #ffffff;
+    padding: 0.4rem;
+    white-space: nowrap;
+}
+
+.inner-data-row td {
+    padding: 0.4rem;
+    border: 1px solid #ddd;
+    word-wrap: break-word;
+}
+
+.inner-td {
+    vertical-align: middle;
+}
+
+/* ====== RESPONSIVENESS ====== */
+
+/* Small Screens (Phones ≤576px) */
+@media (max-width: 576px) {
+    .inner-table-container {
+        margin: 0;
+        padding: 0.2rem;
+    }
+
+    .inner-sub-table-header th {
+        font-size: 0.75rem;
+        padding: 0.3rem;
+    }
+
+    .inner-data-row td {
+        font-size: 0.75rem;
+    }
+}
+
+/* Medium Devices (Tablets 577px–992px) */
+@media (min-width: 577px) and (max-width: 992px) {
+    .inner-sub-table-header th {
+        font-size: 0.8rem;
+    }
+
+    .inner-data-row td {
+        font-size: 0.8rem;
+    }
+}
+
+/* Large Screens (≥1200px) */
+@media (min-width: 1200px) {
+    .inner-sub-table-header th {
+        font-size: 0.95rem;
+    }
+}
