@@ -6,6 +6,7 @@ import { getRequisitions } from "../../service/training.service";
 import Swal from "sweetalert2";
 import { format } from "date-fns";
 import { Tooltip } from "react-tooltip";
+import { MdFeedback } from "react-icons/md";
 import { FaEdit } from "react-icons/fa";
 import RequisitionPrint from "../print/requisition";
 import { FaEye } from "react-icons/fa6";
@@ -15,6 +16,8 @@ const Requisition = () => {
 
     const [requisitionList, setRequisitionList] = useState([]);
     const navigate = useNavigate();
+    const empId = localStorage.getItem("empId");
+
 
     useEffect(() => {
         fetchAgencies();
@@ -66,6 +69,17 @@ const Requisition = () => {
                             <FaEdit className="fs-6" />
                         </button>
                     }
+                    {Number(item.initiatingOfficer) === Number(empId) &&
+                        <button
+                            className="btn btn-sm btn-info me-2"
+                            onClick={() => handleFeedbackClick(item)}
+                            data-tooltip-id="Tooltip"
+                            data-tooltip-content="Feedback"
+                            data-tooltip-place="top"
+                        >
+                            <MdFeedback className="fs-6 text-white" />
+                        </button>
+                    }
                     <button
                         className="print"
                         onClick={() => handlePrint(item)}
@@ -89,6 +103,10 @@ const Requisition = () => {
         navigate("/req-add-edit", { state: { requisitionId: item.requisitionId } });
     };
 
+    const handleFeedbackClick = (item) => {
+        navigate("/feedback-add", { state: item });
+
+    }
     const handlePrint = async (letter) => {
         await RequisitionPrint(letter);
     };
