@@ -29,13 +29,19 @@ const Navbar = () => {
     const [notifiList, setNotifiList] = useState([]);
 
     const title = localStorage.getItem("title");
+    const hindiTitle = localStorage.getItem("hindiTitle");
     const salutation = localStorage.getItem("salutation");
+    const hindiSalutation = localStorage.getItem("hindiSalutation");
     const empName = localStorage.getItem("empName");
+    const hindiEmpName = localStorage.getItem("hindiEmpName");
     const designationCode = localStorage.getItem("designationCode");
+    const hindiEmpDesigName = localStorage.getItem("hindiEmpDesigName");
     const roleId = localStorage.getItem("roleId");
     const userName = localStorage.getItem("username") || "User";
     const roleName = localStorage.getItem("roleName");
+    const hindiRoleName = localStorage.getItem("hindiRoleName");
     const loginId = localStorage.getItem("loginId");
+
 
     const user = JSON.parse(localStorage.getItem("user"));
     const encryptedUser = btoa(user.username);
@@ -47,6 +53,112 @@ const Navbar = () => {
     const [isLauncherOpen, setIsLauncherOpen] = useState(false);
     const [showAll, setShowAll] = useState(false);
     const [showRoleModal, setShowRoleModal] = useState(false);
+
+        const [language, setLanguage] = useState(
+    localStorage.getItem("language") || "en"
+);
+
+   const toggleLanguage = () => {
+    const newLang = language === "en" ? "hi" : "en";
+    setLanguage(newLang);
+    localStorage.setItem("language", newLang);
+};
+
+const translations = {
+  en: {
+    // Navbar
+    home: "Home",
+    logout: "Logout",
+    notifications: "Notifications",
+    noNotifications: "No Notifications",
+    noActiveNotifications: "No active notifications",
+    showAllAlerts: "Show All Alerts",
+
+    // Language
+    changeLanguage: "Change Language",
+
+    // App Launcher
+    accessDenied: "Access Denied",
+    noAccess: "You do not have access to this application.",
+    okay: "Okay",
+    contactAdmin: "Contact System Admin if you need access.",
+
+    // Alerts
+    noOtherRoles: "No other roles available to change.",
+    changeRoleBeforeSubmit: "Please change the Role Before Submit.",
+    roleChangeConfirm: "Are you sure you want to change the role?",
+    roleChangeSuccess: "Role changed successfully!",
+    fetchRolesFailed: "Failed to fetch user roles. Please try again later.",
+
+    // User Menu
+    changeRole: "Change Role",
+    changePassword: "Change Password",
+    auditStamping: "Audit Stamping",
+
+    // Notification Panel
+    notificationPanel: "Notifications",
+    noNotificationsAvailable: "No notifications available",
+    viewDetails: "View Details",
+    closePanel: "Close Panel",
+
+    // Role Change Modal
+    roleChange: "Role Change",
+    close: "Close",
+    loggedInRole: "Logged In Role",
+    selectRole: "Change Role",
+    change: "Change",
+    roleChangeNote:
+      "Note: If roles are changed, you will be redirected to the dashboard."
+  },
+
+  hi: {
+    // Navbar
+    home: "होम",
+    logout: "लॉगआउट",
+    notifications: "सूचनाएँ",
+    noNotifications: "कोई सूचना नहीं",
+    noActiveNotifications: "कोई सक्रिय सूचना नहीं",
+    showAllAlerts: "सभी सूचनाएँ देखें",
+
+    // Language
+    changeLanguage: "भाषा बदलें",
+
+    // App Launcher
+    accessDenied: "प्रवेश अस्वीकृत",
+    noAccess: "आपको इस एप्लिकेशन का उपयोग करने की अनुमति नहीं है।",
+    okay: "ठीक है",
+    contactAdmin: "यदि आवश्यकता हो तो सिस्टम एडमिन से संपर्क करें।",
+
+    // Alerts
+    noOtherRoles: "बदलने के लिए कोई अन्य भूमिका उपलब्ध नहीं है।",
+    changeRoleBeforeSubmit: "कृपया सबमिट करने से पहले भूमिका बदलें।",
+    roleChangeConfirm: "क्या आप भूमिका बदलना चाहते हैं?",
+    roleChangeSuccess: "भूमिका सफलतापूर्वक बदल दी गई।",
+    fetchRolesFailed: "भूमिकाएँ प्राप्त नहीं हो सकीं। कृपया पुनः प्रयास करें।",
+
+    // User Menu
+    changeRole: "भूमिका बदलें",
+    changePassword: "पासवर्ड बदलें",
+    auditStamping: "लेखा-परीक्षण मुद्रांकन",
+
+    // Notification Panel
+    notificationPanel: "सूचनाएँ",
+    noNotificationsAvailable: "कोई सूचना उपलब्ध नहीं है",
+    viewDetails: "विवरण देखें",
+    closePanel: "पैनल बंद करें",
+
+    // Role Change Modal
+    roleChange: "भूमिका परिवर्तन",
+    close: "बंद करें",
+    loggedInRole: "वर्तमान भूमिका",
+    selectRole: "भूमिका बदलें",
+    change: "बदलें",
+    roleChangeNote:
+      "नोट: भूमिका बदलने के बाद आपको डैशबोर्ड पर पुनः भेज दिया जाएगा।"
+  }
+};
+
+const t = translations[language];
 
     const handleShowAll = () => {
         setShowAll(true);
@@ -82,7 +194,13 @@ const Navbar = () => {
     const handleLogout = async (e) => {
         e.preventDefault();
         await logout("L");
+         // Save language
+    const language = localStorage.getItem("language");
         localStorage.clear();
+           // Restore language
+    if (language) {
+        localStorage.setItem("language", language);
+    }
         navigate("/login");
     };
 
@@ -129,9 +247,9 @@ const Navbar = () => {
     };
 
     const formatName = () => {
-        const cleanTitle = (salutation && salutation !== "null") ? salutation : (title && title !== "null") ? title : "";
-        const cleanName = (empName && empName !== "null") ? empName : "";
-        const cleanDesignation = (designationCode && designationCode !== "null") ? `, ${designationCode}` : "";
+        const cleanTitle = (salutation && salutation !== "null") ? language ==="en" ?  salutation : hindiSalutation : (title && title !== "null") ? language ==="en" ?  title : hindiTitle : "";
+        const cleanName = (empName && empName !== "null") ? language ==="en" ?  empName : hindiEmpName : "";
+        const cleanDesignation = (designationCode && designationCode !== "null") ? `, ${language==="en" ? designationCode : hindiEmpDesigName}` : "";
 
         return `${cleanTitle} ${cleanName}`.trim() + cleanDesignation;
     };
@@ -278,7 +396,7 @@ const Navbar = () => {
                                         </h3>
 
                                         <h6 className="mb-0 d-flex align-items-end login-name" style={{ fontSize: "0.9rem" }}>
-                                            {formatName()} ({currentRoleName})
+                                            {formatName()} ({language === "en" ? currentRoleName : hindiRoleName})
                                         </h6>
                                     </div>
                                 </a>
@@ -326,9 +444,38 @@ const Navbar = () => {
                                 </li>
                             )}
 
+                            <li>  <button
+        className="language-toggle-btn"
+        onClick={toggleLanguage}
+       // title={language === "en" ? "Change Language" : "भाषा बदलें"}
+    >
+
+        <svg
+            className="language-svg"
+            xmlns="http://www.w3.org/2000/svg"
+            width="26"
+            height="26"
+            viewBox="0 0 64 64"
+            fill="none"
+        >
+
+            <path d="M37.6672 9.95973V31.9997H34.4272V9.95973H31.5071V7.11973H41.8271V9.95973H37.6672ZM22.5871 6.71973C24.6671 6.71973 26.2538 7.23973 27.3471 8.27973C28.4671 9.31973 29.0271 10.6264 29.0271 12.1997C29.0271 13.3464 28.7205 14.3864 28.1071 15.3197C27.5205 16.2264 26.6405 16.9464 25.4671 17.4797C24.2938 18.0131 22.8271 18.3064 21.0671 18.3597L20.8671 15.5597C22.6805 15.5064 23.9605 15.1864 24.7071 14.5997C25.4805 14.0131 25.8671 13.2264 25.8671 12.2397C25.8671 11.2797 25.5471 10.5864 24.9071 10.1597C24.2938 9.73306 23.5738 9.51973 22.7471 9.51973C21.7605 9.51973 20.8671 9.65306 20.0671 9.91973C19.2671 10.1864 18.4138 10.5464 17.5071 10.9997L16.5071 8.23973C17.2005 7.86639 18.0538 7.51973 19.0671 7.19973C20.1071 6.87973 21.2805 6.71973 22.5871 6.71973ZM29.4671 23.2797C29.4671 24.5064 29.1871 25.5331 28.6271 26.3597C28.0671 27.1864 27.3071 27.7997 26.3471 28.1997C25.4138 28.5997 24.3471 28.7997 23.1471 28.7997C21.6271 28.7997 20.2138 28.4264 18.9071 27.6797C17.6271 26.9331 16.4005 25.7464 15.2271 24.1197C14.0805 22.4931 12.9471 20.3731 11.8271 17.7597L14.6671 16.7197C15.4405 18.6131 16.2405 20.2531 17.0671 21.6397C17.9205 22.9997 18.8271 24.0531 19.7871 24.7997C20.7471 25.5197 21.7738 25.8797 22.8671 25.8797C23.8805 25.8797 24.7071 25.6531 25.3471 25.1997C25.9871 24.7197 26.3071 23.9597 26.3071 22.9197C26.3071 21.6397 25.8671 20.5331 24.9871 19.5997C24.1071 18.6664 23.0405 17.8131 21.7871 17.0397L24.1471 16.9197L25.8671 16.5597C26.2405 16.8797 26.6538 17.2664 27.1071 17.7197C27.5605 18.1731 27.9205 18.6264 28.1871 19.0797L28.3872 19.8397C28.7338 20.3464 29.0005 20.8797 29.1871 21.4397C29.3738 21.9997 29.4671 22.6131 29.4671 23.2797ZM30.1071 17.9997C31.3871 17.9997 32.4938 17.9064 33.4272 17.7197C34.3605 17.5064 35.4538 17.1731 36.7071 16.7197V19.5997C35.5605 20.1064 34.5205 20.4397 33.5871 20.5997C32.6805 20.7597 31.6805 20.8397 30.5871 20.8397C30.1871 20.8397 29.7205 20.8131 29.1871 20.7597C28.6538 20.6797 28.1471 20.5997 27.6671 20.5197C27.2138 20.4131 26.8805 20.3197 26.6671 20.2397L24.7871 17.9997L25.0271 17.3997C25.8005 17.5864 26.6138 17.7331 27.4671 17.8397C28.3205 17.9464 29.2005 17.9997 30.1071 17.9997Z" fill="currentColor"></path>
+                <path d="M52.3467 58.6664L49.136 50.4158H38.5707L35.3973 58.6664H32L42.416 31.8984H45.44L55.8187 58.6664H52.3467ZM48.128 47.4291L45.1413 39.3651C45.0667 39.1659 44.9421 38.8051 44.768 38.2824C44.5939 37.7598 44.4195 37.2246 44.2453 36.6771C44.096 36.1046 43.9715 35.6691 43.872 35.3704C43.6728 36.1419 43.4613 36.9011 43.2373 37.6478C43.0381 38.3696 42.864 38.9419 42.7147 39.3651L39.6907 47.4291H48.128Z" fill="currentColor"></path>
+           
+
+        </svg>
+
+        <span className="language-tooltip">
+            {language === "en"
+                ? "Change Language"
+                : "भाषा बदलें"}
+        </span>
+
+    </button></li>
+
                             <li className="nav-item dropdown">
                                 <a href="/dashboard" className="nav-link nav-animate">
-                                    <FaHome className="icon-name" />Home
+                                    <FaHome className="icon-name" />{t.home}
                                 </a>
                             </li>
 
@@ -346,14 +493,14 @@ const Navbar = () => {
                                                 return IconComponent ? <IconComponent className="icon-name" /> : null;
                                             })()}
 
-                                            {module.formModuleName}
+                                            {language==="en"? module.formModuleName : module.hindiFormModuleName}
                                             <FaCaretDown className="arrow-down" />
                                         </a>
                                         <ul className="dropdown-menu mt-2">
                                             {filteredDetails.map((detail, idx) => (
                                                 <li key={idx}>
                                                     <a className="dropdown-item" href={`/${detail?.formUrl}`} onClick={() => localStorage.setItem("formDetailId", detail.formDetailId)}>
-                                                        {detail.formDispName}
+                                                        {language==="en"? detail.formDispName : detail.hindiFormDispName}
                                                     </a>
                                                 </li>
                                             ))}
@@ -394,7 +541,7 @@ const Navbar = () => {
                                 </a>
                                 <ul className="dropdown-menu dropdown-menu-end dropdown-menu-notification mt-2 dms-notification shadow-lg rounded p-0">
                                     <li className="dropdown-header border-bottom text-dark employee-text py-2 bg-white sticky-top z-10 notificationStyles" >
-                                        <strong className="fw-bold ">Notifications</strong>
+                                        <strong className="fw-bold ">{t.notifications}</strong>
                                     </li>
 
                                     <div className="notifyStyles1" >
@@ -434,14 +581,14 @@ const Navbar = () => {
                                                 );
                                             })
                                         ) : (
-                                            <li className="px-3 py-2 text-muted">No Notifications</li>
+                                            <li className="px-3 py-2 text-muted">{t.noNotifications}</li>
                                         )}
                                     </div>
 
                                     {notifiList.length > 0 && (
                                         <li className="dropdown-footer text-center py-2 bg-white sticky-bottom z-10 border-top">
                                             <button className="btn btn-link fs-14" onClick={handleShowAll}>
-                                                Show All Alerts
+                                                {t.showAllAlerts}
                                             </button>
                                         </li>
                                     )}
@@ -469,7 +616,7 @@ const Navbar = () => {
                                                 className="dropdown-item"
                                                 onClick={handleRoleChange}
                                             >
-                                                <RiExchangeLine className="ms-0 me-3" size={20} /> Change Role
+                                                <RiExchangeLine className="ms-0 me-3" size={20} /> {t.changeRole}
                                             </button>
                                         </li>
                                     }
@@ -479,7 +626,7 @@ const Navbar = () => {
                                             className="dropdown-item"
                                             onClick={() => navigate("/password-change")}
                                         >
-                                            <MdOutlineChangeCircle className="ms-0 me-3" size={20} /> Change Password
+                                            <MdOutlineChangeCircle className="ms-0 me-3" size={20} /> {t.changePassword}
                                         </button>
                                     </li>
                                     <li className="dropdown-item">
@@ -488,7 +635,7 @@ const Navbar = () => {
                                             className="dropdown-item"
                                             onClick={() => navigate("/audit-stamping")}
                                         >
-                                            <MdOutlineFingerprint className="ms-0 me-3" size={20} /> Audit Stamping
+                                            <MdOutlineFingerprint className="ms-0 me-3" size={20} /> {t.auditStamping}
                                         </button>
                                     </li>
                                     <li className="dropdown-item">
@@ -497,7 +644,7 @@ const Navbar = () => {
                                             className="dropdown-item"
                                             onClick={handleLogout}
                                         >
-                                            <RiLogoutCircleRLine className="ms-0 me-4" />   Logout
+                                            <RiLogoutCircleRLine className="ms-0 me-4" />   {t.logout}
                                         </button>
                                     </li>
 
@@ -515,7 +662,7 @@ const Navbar = () => {
                                     <div className="panel-header">
                                         <div className="header-title">
                                             <FaBell className="header-icon" />
-                                            <h5>Notifications</h5>
+                                            <h5>{t.notificationPanel}</h5>
                                             <span className="count-pill">{notifiList.length}</span>
                                         </div>
                                         <button className="close-panel-btn" onClick={handleClose} aria-label="Close">
@@ -527,7 +674,7 @@ const Navbar = () => {
                                     <div className="panel-body">
                                         {notifiList.length === 0 ? (
                                             <div className="empty-state">
-                                                <p>No notifications available</p>
+                                                <p>{t.noNotificationsAvailable}</p>
                                             </div>
                                         ) : (
                                             notifiList.map((notif) => (
