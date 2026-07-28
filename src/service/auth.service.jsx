@@ -66,6 +66,7 @@ roles.forEach((role, i) => {
       localStorage.setItem('hindiRoleName',emp?.data.hindiRoleName)
       localStorage.setItem('hindiSalutation',emp?.data.hindiSalutation)
       localStorage.setItem('hindiTitle',emp?.data.hindiTitle)
+      localStorage.setItem('isGroup', emp?.data.isGroup);
 
       await customAuditStampingLogin(username);
       return response.data;

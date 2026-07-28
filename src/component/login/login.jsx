@@ -27,21 +27,27 @@ const Login = () => {
       usernamePlaceholder: "Enter Username",
       password: "Password",
       passwordPlaceholder: "Enter Password",
+       usernameRequired: "Username is required",
+      passwordRequired: "Password is required",
       login: "Login",
       developed: "Designed & Developed by",
       browserText: "Best viewed on",
+       invalidCredentials: "Invalid username or password",
     },
     hi: {
       title: "एचआरएमएस",
-      subtitle: "मानव संसाधन प्रबंधन प्रणाली",
+      subtitle: "मानव संसाधन प्रबंधन प्रणाली (संस्करण 1.0)",
       welcome: "वापसी पर आपका स्वागत है",
       username: "उपयोगकर्ता नाम",
       usernamePlaceholder: "उपयोगकर्ता नाम दर्ज करें",
       password: "पासवर्ड",
       passwordPlaceholder: "पासवर्ड दर्ज करें",
+      usernameRequired: "उपयोगकर्ता नाम आवश्यक है",
+    passwordRequired: "पासवर्ड आवश्यक है",
       login: "लॉगिन",
       developed: "डिज़ाइन एवं विकसित",
       browserText: "सर्वोत्तम प्रदर्शन हेतु",
+      invalidCredentials: "अमान्य उपयोगकर्ता नाम या पासवर्ड",
     },
   };
 
@@ -55,11 +61,11 @@ const Login = () => {
 
   const validationSchema = Yup.object().shape({
     username: Yup.string()
-      .required("Username is required")
+      .required(t.usernameRequired)
       .min(3, "Username must be at least 3 characters")
       .max(20, "Username must not exceed 20 characters"),
     password: Yup.string()
-      .required("Password is required")
+      .required(t.passwordRequired)
       .min(3, "Password must be at least 3 characters")
       .max(40, "Password must not exceed 40 characters"),
   });
@@ -99,7 +105,7 @@ const Login = () => {
 
       if (error.response) {
         const status = error.response.status;
-        if (status === 401) resMessage = "Invalid username or password";
+        if (status === 401) resMessage = t.invalidCredentials;
         else if (status === 403)
           resMessage = "Your account is locked or disabled";
         else if (status === 400) resMessage = "Invalid input format";
@@ -152,7 +158,11 @@ const Login = () => {
             <p>{t.subtitle}</p>
           </div>
 
+
+
           <div className="clock-pill">{time}</div>
+
+        
 
           <div className="language-container">
             <button
@@ -178,7 +188,7 @@ const Login = () => {
                 ></path>
               </svg>
 
-              <span className="language-tooltip">
+              <span className="language-tooltips">
                 {language === "en" ? "Change Language" : "भाषा बदलें"}
               </span>
             </button>
