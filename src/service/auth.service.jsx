@@ -23,6 +23,8 @@ export const login = async (username, password) => {
 
     const response = await authenticationDetails(loginData);
 
+
+
     if (response.data.data.token) {
       localStorage.setItem(
         'user',
@@ -32,9 +34,23 @@ export const login = async (username, password) => {
         })
       );
 
+      const roles = response.data.data.roles || [];
+const hindiRoles = response.data.data.hindiRoles || [];
+
+const hindiRoleMap = {};
+
+roles.forEach((role, i) => {
+    hindiRoleMap[role] = hindiRoles[i];
+});
+
       localStorage.setItem('roles', JSON.stringify(response.data.data.roles || []))
 
+
+       localStorage.setItem("hindiRoleMap", JSON.stringify(hindiRoleMap));
+
       const emp = await getUserDetails(username);
+
+      
 
       localStorage.setItem('username', username);
       localStorage.setItem('loginId', emp?.data.loginId);
@@ -45,6 +61,11 @@ export const login = async (username, password) => {
       localStorage.setItem('title', emp?.data.title);
       localStorage.setItem('salutation', emp?.data.salutation);
       localStorage.setItem('roleId', emp?.data.roleId);
+      localStorage.setItem('hindiEmpDesigName',emp?.data.hindiEmpDesigName)
+      localStorage.setItem('hindiEmpName',emp?.data.hindiEmpName)
+      localStorage.setItem('hindiRoleName',emp?.data.hindiRoleName)
+      localStorage.setItem('hindiSalutation',emp?.data.hindiSalutation)
+      localStorage.setItem('hindiTitle',emp?.data.hindiTitle)
       localStorage.setItem('isGroup', emp?.data.isGroup);
 
       await customAuditStampingLogin(username);
@@ -64,6 +85,9 @@ export const setLocalStorageData = async (username) => {
   }
 
   try {
+
+    localStorage.setItem('roles', JSON.stringify([]))
+
     const emp = await getUserDetails(username);
 
     localStorage.setItem('loginId', emp?.data.loginId);
@@ -87,7 +111,7 @@ export const logout = async (logoutType) => {
   if (user && user.username) {
     try {
       await customAuditStampingLogout(user.username, logoutType);
-      localStorage.clear();
+     // localStorage.clear();
     } catch (error) {
       console.error('Error occurred in logout:', error);
       throw error;
