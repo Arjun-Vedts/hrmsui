@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Navbar from "../navbar/Navbar";
 import DirectorApprovalList from "./directorApprovalList";
 import SAHRTApprovalList from "./saHrtApprovalLIst";
 import { getApprovalType } from "../../service/training.service";
@@ -30,7 +29,6 @@ const RequisitionApprovedList = () => {
 
     return (
         <div>
-            <Navbar />
             {
                 ["DIRECTOR", "SA_HRT"].includes(approvalType) ? (
                     <DirectorApprovalList />

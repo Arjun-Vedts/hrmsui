@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import Navbar from '../navbar/Navbar';
 import { getDistribution } from '../../service/training.service';
 import { useNavigate } from 'react-router-dom';
 import Datatable from "../../datatable/Datatable";
@@ -82,7 +81,6 @@ const DistributionComponent = () => {
 
     return (
         <div>
-            <Navbar />
             <div>
                 <h3 className="fancy-heading mt-3">
                     Distribution List

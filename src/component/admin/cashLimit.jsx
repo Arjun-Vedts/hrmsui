@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import Navbar from "../navbar/Navbar";
 import Datatable from "../../datatable/Datatable";
 import { Tooltip } from "react-tooltip";
 import { FaEdit } from "react-icons/fa";
@@ -329,8 +328,6 @@ const CashLimit = () => {
 
     return (
         <div>
-            <Navbar />
-
             <h3 className="fancy-heading mt-3">
                 Cash Limit
                 <span className="underline-glow">

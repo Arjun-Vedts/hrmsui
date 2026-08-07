@@ -40,6 +40,8 @@ import ChangePassword from "../component/admin/changePassword.jsx";
 import HandingOverList from "../component/admin/handingOverList.jsx";
 import CashLimit from "../component/admin/cashLimit.jsx";
 import SAHRTApprovalList from "../component/approval/saHrtApprovalLIst.jsx";
+import ProtectedRoute from "./ProtectedRoute.jsx";
+import Layout from "./Layout.jsx";
 
 
 function AppRoutes() {
@@ -58,30 +60,44 @@ function AppRoutes() {
 
   useEffect(() => {
     const handleMessage = async (event) => {
-      // 1. Security check
       const URLs = config.URLs;
-      console.log("event.origin", event.origin)
+      // Security: Discard messages from untrusted origins
       if (!URLs.includes(event.origin)) return;
 
-      if (event.data.user) {
+      // 1. Explicitly check for the LOGIN_SUCCESS type
+      if (event.data?.type === "LOGIN_SUCCESS" && event.data?.user) {
+        
+        // 2. IMMEDIATELY send acknowledgment back to the parent
+        if (event.source) {
+          event.source.postMessage({ type: "LOGIN_ACK" }, event.origin);
+        }
 
-        console.log(event.data.user.username, "event.data.user.username")
-        // 2. Clear everything to prevent User A's data from hanging around
+        // 3. Process the login payload
         localStorage.clear();
         localStorage.setItem("user", JSON.stringify(event.data.user));
 
         if (event.data.user.username) {
           await setLocalStorageData(event.data.user.username);
         }
+
+        const module = event?.data?.module || "dashboard";
+        sessionStorage.setItem("launchModule", module);
+        sessionStorage.setItem("launchMode", module !== "dashboard");
+
         setIsCheckingSession(false);
 
-        // This removes "?ibas=true" from the address bar WITHOUT refreshing the page
-        window.history.replaceState({}, document.title, window.location.pathname);
+        // 4. Safely clean up the URL without a page refresh
+        const currentUrl = new URL(window.location.href);
+        // Assuming 'ems' is the code. You might want to make this dynamic 
+        // based on the app.code passed from the parent if multiple apps use this.
+        currentUrl.searchParams.delete("hrms"); 
+        window.history.replaceState({}, document.title, currentUrl.pathname + currentUrl.search);
       }
     };
 
     window.addEventListener("message", handleMessage);
-
+    
+    // Failsafe timer: If handshake fails or takes too long, stop loading spinner
     const timer = setTimeout(() => {
       setIsCheckingSession(false);
     }, 3000);
@@ -91,7 +107,6 @@ function AppRoutes() {
       clearTimeout(timer);
     };
   }, []);
-
 
 
   useEffect(() => {
@@ -132,42 +147,44 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/employee" element={<Employee />} />
-        <Route path="/designation" element={<Designation />} />
-        <Route path="/division" element={<Division />} />
-        <Route path="/course" element={<ProgramList />} />
-        <Route path="/organizer" element={<OrganizerList />} />
-        <Route path="/users" element={<UserManagerList />} />
-        <Route path="/roleaccess" element={<FormRoleAccess />} />
-        <Route path="/calendar" element={<Calendar />} />
-         <Route path="/cash-limit" element={<CashLimit />}/>
-        <Route path="/requisition" element={<Requisition />} />
-        <Route path="/feedback-add" element={<Feedback />} />
-        <Route path="/feedback" element={<FeedbackList />} />
-        <Route path="/req-add-edit" element={<AddEditRequisition />} />
-        <Route path="/req-approval" element={<RequisitionApproval />} />
-        <Route path="/sign-authority" element={<SignAuthority />} />
-        <Route path="/transaction" element={<Transaction />} />
-        <Route path="/evaluation" element={<Evaluation />} />
-        <Route path="/eligibility" element={<Eligibility />} />
-        <Route path="/reports" element={<AllReportsTemplate />} />
-        <Route path="/degree-mtech" element={<HigherDegreeMtech />} />
-        <Route path="/degree-phd" element={<HigherDegreePhD />} />
-        <Route path="/higherDegree-add" element={<HigherDegreeAddEdit />} />
-        <Route path="/req-approved-list" element={<RequisitionApprovedList />} />
-        <Route path="/cep" element={<CepComponent />} />
-        <Route path="/cep-add" element={<AddEditCepComponent />} />
-        <Route path="/hr-distribution" element={<DistributionComponent />} />
-        <Route path="/hr-distribution-add" element={<AddEditDistributionComponent />} />
-        <Route path="/audit-stamping" element={<AuditStampingList />} />
-        <Route path="/journal" element={<Journal />} />
-        <Route path="/mandatory-training" element={<MandatoryTraining />} />
-        <Route path="/mandatory-training-add" element={<MandatoryTrainingAddEdit />} />
-        <Route path='/license-exp' element={<LicenseExp />} />
-        <Route path="/password-change" element={<ChangePassword />} />
-        <Route path="/handing-over" element={<HandingOverList />} />
-        <Route path="/req-sa-approval" element={<SAHRTApprovalList />} />
+        <Route element={<ProtectedRoute> <Layout /> </ProtectedRoute>} >
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/employee" element={<Employee />} />
+          <Route path="/designation" element={<Designation />} />
+          <Route path="/division" element={<Division />} />
+          <Route path="/course" element={<ProgramList />} />
+          <Route path="/organizer" element={<OrganizerList />} />
+          <Route path="/users" element={<UserManagerList />} />
+          <Route path="/roleaccess" element={<FormRoleAccess />} />
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/cash-limit" element={<CashLimit />}/>
+          <Route path="/requisition" element={<Requisition />} />
+          <Route path="/feedback-add" element={<Feedback />} />
+          <Route path="/feedback" element={<FeedbackList />} />
+          <Route path="/req-add-edit" element={<AddEditRequisition />} />
+          <Route path="/req-approval" element={<RequisitionApproval />} />
+          <Route path="/sign-authority" element={<SignAuthority />} />
+          <Route path="/transaction" element={<Transaction />} />
+          <Route path="/evaluation" element={<Evaluation />} />
+          <Route path="/eligibility" element={<Eligibility />} />
+          <Route path="/reports" element={<AllReportsTemplate />} />
+          <Route path="/degree-mtech" element={<HigherDegreeMtech />} />
+          <Route path="/degree-phd" element={<HigherDegreePhD />} />
+          <Route path="/higherDegree-add" element={<HigherDegreeAddEdit />} />
+          <Route path="/req-approved-list" element={<RequisitionApprovedList />} />
+          <Route path="/cep" element={<CepComponent />} />
+          <Route path="/cep-add" element={<AddEditCepComponent />} />
+          <Route path="/hr-distribution" element={<DistributionComponent />} />
+          <Route path="/hr-distribution-add" element={<AddEditDistributionComponent />} />
+          <Route path="/audit-stamping" element={<AuditStampingList />} />
+          <Route path="/journal" element={<Journal />} />
+          <Route path="/mandatory-training" element={<MandatoryTraining />} />
+          <Route path="/mandatory-training-add" element={<MandatoryTrainingAddEdit />} />
+          <Route path='/license-exp' element={<LicenseExp />} />
+          <Route path="/password-change" element={<ChangePassword />} />
+          <Route path="/handing-over" element={<HandingOverList />} />
+          <Route path="/req-sa-approval" element={<SAHRTApprovalList />} />
+        </Route>
       </Routes>
 
     </>

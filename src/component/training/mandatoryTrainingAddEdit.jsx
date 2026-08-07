@@ -1,5 +1,4 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import Navbar from "../navbar/Navbar";
 import { useEffect, useRef, useState } from "react";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import * as Yup from "yup";
@@ -382,7 +381,6 @@ const MandatoryTrainingAddEdit = () => {
 
     return (
         <div>
-            <Navbar />
 
             <h3 className="fancy-heading mt-4">
                 {requisitionId ? "Edit Mandatory Training" : "Add  Mandatory Training"}

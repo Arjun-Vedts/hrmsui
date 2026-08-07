@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Form, Formik } from "formik";
 import Datatable from "../../datatable/Datatable";
-import Navbar from "../navbar/Navbar";
 import {
   getFormModulesList,
   getFormRoleAccessList,
@@ -164,7 +163,6 @@ const FormRoleAccess = () => {
   ];
 
   return (<div>
-    <Navbar />
     <div className="container-fluid p-3">
 
       <div>

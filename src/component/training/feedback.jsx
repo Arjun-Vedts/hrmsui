@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Navbar from "../navbar/Navbar";
 import { format } from "date-fns";
 import * as Yup from "yup";
 import { Form, Formik } from "formik";
@@ -194,8 +193,6 @@ const Feedback = () => {
 
     return (
         <div>
-            <Navbar />
-
             <h3 className="fancy-heading mt-3">
                 Feedback Form
                 <span className="underline-glow">

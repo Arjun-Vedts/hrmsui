@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import Datatable from "../../datatable/Datatable";
-import Navbar from "../navbar/Navbar";
 import { useNavigate } from "react-router-dom";
 import { acceptReqFeedback, feedbackFileDownload, getFeedbackList, getFeedbackPrint, getLabMasterData } from "../../service/training.service";
 import Swal from "sweetalert2";
@@ -268,8 +267,6 @@ const FeedbackList = () => {
 
     return (
         <div>
-            <Navbar />
-
             <h3 className="fancy-heading mt-3">
                 Feedback List
                 <span className="underline-glow">

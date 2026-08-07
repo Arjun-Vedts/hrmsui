@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../navbar/Navbar';
 import { Formik, Form, Field, ErrorMessage, FieldArray } from 'formik';
 import { getDivisions, getEmployees, handleApiError } from "../../service/master.service";
 import Swal from 'sweetalert2';
@@ -327,7 +326,6 @@ const AddEditCepComponent = () => {
 
   return (
     <div>
-      <Navbar />
       <h3 className="fancy-heading mt-3">
         {isEdit ? "In-House CEP" : "In-House CEP"}
         <span className="underline-glow">

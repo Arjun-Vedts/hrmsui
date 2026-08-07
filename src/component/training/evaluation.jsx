@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Navbar from "../navbar/Navbar";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import * as Yup from "yup";
 import { getEmployees, handleApiError } from "../../service/master.service";
@@ -339,8 +338,6 @@ const Evaluation = () => {
 
     return (
         <div>
-            <Navbar />
-
             <h3 className="fancy-heading mt-3">
                 Evaluation List
                 <span className="underline-glow">

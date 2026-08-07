@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { usePermission } from "../../common/usePermission";
-import Navbar from "../navbar/Navbar";
 import Datatable from "../../datatable/Datatable";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import * as Yup from "yup";
@@ -221,8 +220,6 @@ const Journal = () => {
 
     return (
         <div>
-            <Navbar />
-
             <h3 className="fancy-heading mt-3">
                 Journal List
                 <span className="underline-glow">

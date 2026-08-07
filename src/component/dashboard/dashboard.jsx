@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import Navbar from "../navbar/Navbar";
 import { getCourseDashboardCount, getRequisitionDashboardCount, getRequisitionUserDashboardCount } from "../../service/dashboard.service";
 import "./dashboard.css";
 import { FaBookReader, FaCheckCircle, FaClock, FaDatabase, FaList, FaShare, FaThumbsUp, FaUniversity } from "react-icons/fa";
@@ -141,7 +140,6 @@ const Dashboard = () => {
 
     return (
         <div>
-            <Navbar />
             <div className="dashboard-container container mt-4">
 
                 {/* HEADER */}

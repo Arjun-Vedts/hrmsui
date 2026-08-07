@@ -187,8 +187,13 @@ const Navbar = () => {
     const handleAppLaunch = async (app) => {
         setIsLauncherOpen(false);
 
+        // Synchronous open prevents browser popup blockers
+        const needsNewTab = app.action === 'open' || app.url !== '/under-development';
+        const pendingWindow = needsNewTab ? window.open('', '_blank') : null;
+
         const hasAccess = await checkUserProjectAccess(app.code);
         if (!hasAccess) {
+            pendingWindow?.close();
             Swal.fire({
                 title: 'Access Denied',
                 text: `You do not have access to ${app.code} application.`,
@@ -210,24 +215,78 @@ const Navbar = () => {
 
         if (app.action === 'open') {
             const userData = localStorage.getItem("user");
-            if (!userData) return;
+            if (!userData) {
+                pendingWindow?.close();
+                return;
+            }
 
-            const appWindow = window.open(`${targetUrl}/${app.launchpath}?${app.code.toLowerCase()}=true`, '_blank');
+            if (pendingWindow) {
+                pendingWindow.location.href = `${targetUrl}/${app.launchpath}?${app.code.toLowerCase()}=true`;
+            }
 
-            let count = 0;
-            const checkInterval = setInterval(() => {
-                if (appWindow && count < 10) {
-                    appWindow.postMessage(
-                        { type: "LOGIN_SUCCESS", user: JSON.parse(userData) }, targetUrl);
-                    count++;
-                } else {
+            // Handshake State (Scoped to this specific launch)
+            let delivered = false;
+            let attempts = 0;
+            const maxAttempts = 10;
+            let checkInterval;
+
+            // 1. Listen for the child's acknowledgment
+            const onAck = (event) => {
+                // Security: Validate origin strictly
+                if (event.origin !== new URL(targetUrl).origin) return;
+                
+                if (event.data?.type === "LOGIN_ACK") {
+                    delivered = true;
                     clearInterval(checkInterval);
+                    window.removeEventListener("message", onAck);
+                }
+            };
+
+            window.addEventListener("message", onAck);
+
+            // 2. Poll the child window until acknowledged or timed out
+            checkInterval = setInterval(() => {
+                attempts++;
+                
+                if (delivered || attempts > maxAttempts || !pendingWindow || pendingWindow.closed) {
+                    clearInterval(checkInterval);
+                    window.removeEventListener("message", onAck);
+                    
+                    if (!delivered && attempts > maxAttempts) {
+                        Swal.fire({
+                            title: 'Sign-in Failed',
+                            text: `Could not complete sign-in to ${app.code}. Please try again.`,
+                            icon: 'error',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'Okay',
+                            showClass: {
+                                popup: 'animate__animated animate__fadeInDown'
+                            },
+                            hideClass: {
+                                popup: 'animate__animated animate__fadeOutUp'
+                            }
+                        });
+                        // showAuthError(`Could not complete sign-in to ${app.code}. Please try again.`);
+                    }
+                    return;
+                }
+
+                // 3. Send the payload
+                try {
+                    pendingWindow.postMessage(
+                    { type: "LOGIN_SUCCESS", user: JSON.parse(userData)},
+                    targetUrl
+                    );
+                } catch (e) {
+                    // Window may have been closed or navigating, safely ignore
                 }
             }, 1000);
         } else if (targetUrl === '/under-development') {
+            pendingWindow?.close();
             window.location.href = targetUrl;
-        } else {
-            window.open(app.url, '_blank', 'noopener,noreferrer');
+        } else if (pendingWindow) {
+            pendingWindow.opener = null;
+            pendingWindow.location.href = app.url;
         }
     };
 

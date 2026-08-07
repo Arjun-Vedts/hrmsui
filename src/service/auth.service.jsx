@@ -64,6 +64,8 @@ export const setLocalStorageData = async (username) => {
   }
 
   try {
+    localStorage.setItem('roles', JSON.stringify([]));
+
     const emp = await getUserDetails(username);
 
     localStorage.setItem('loginId', emp?.data.loginId);
