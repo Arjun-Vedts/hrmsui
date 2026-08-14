@@ -262,6 +262,18 @@ export const getFeedbackList = async (empId, roleName) => {
     }
 };
 
+export const getFeedbackListByDateRange = async (empId, roleName, fromDate, toDate) => {
+    try {
+        return (await axios.get(`${API_URL}api/training/feedback-list-date-range`, {
+            params: { empId, roleName, fromDate, toDate },
+            headers: { 'Content-Type': 'application/json', ...authHeader() }
+        })).data;
+    } catch (error) {
+        console.error('Error occurred in getFeedbackListByDateRange():', error);
+        throw error;
+    }
+};
+
 export const getFeedbackById = async (id) => {
     try {
         return (await axios.get(`${API_URL}api/training/feedback-data/${id}`, { headers: { 'Content-Type': 'application/json', ...authHeader() } })).data;
