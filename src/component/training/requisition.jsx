@@ -249,6 +249,7 @@ const Requisition = () => {
                                 )}
 
                                 {Number(item.initiatingOfficer) === Number(empId) &&
+                                    item.isAttend === "Y" &&
                                     !feedbackExists && (item.status === "CO" || item.status === "FA") && (
                                         <button
                                             className="btn btn-sm btn-secondary me-2"

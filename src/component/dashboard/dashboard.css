@@ -927,7 +927,7 @@
 
     min-width: min-content;
 
-    height: 260px;
+    height: 360px;
 
     padding: 30px 6px 0;
 }
@@ -1277,6 +1277,268 @@
 
     .course-bar-segment span {
         font-size: 9px;
+    }
+
+}
+
+.feedback-card {
+    overflow: hidden;
+}
+
+.feedback-list {
+    padding: 16px 20px 20px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.feedback-item {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 10px 12px;
+    transition: all 0.2s ease;
+}
+
+.feedback-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+}
+
+.feedback-req-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.feedback-label {
+    font-size: 11px;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.feedback-req-no {
+    font-size: 14px;
+    color: #dc3545;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.feedback-empty {
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #198754;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 20px;
+}
+
+.feedback-empty-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #d1e7dd;
+    color: #198754;
+    font-weight: 700;
+}
+
+
+/* ---------------------------------------------------------------------
+   Yearly trend card — horizontal-scroll polish
+--------------------------------------------------------------------- */
+
+.ud-trend-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.ud-trend-scroll-hint {
+    margin-left: auto;
+    color: #98a2b3;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+}
+
+.ud-trend-scroll {
+    position: relative;
+    -webkit-mask-image: linear-gradient(to right,
+            transparent 0,
+            #000 24px,
+            #000 calc(100% - 24px),
+            transparent 100%);
+    mask-image: linear-gradient(to right,
+            transparent 0,
+            #000 24px,
+            #000 calc(100% - 24px),
+            transparent 100%);
+    scroll-behavior: smooth;
+}
+
+.ud-trend-scroll .trend-year-group {
+    scroll-snap-align: center;
+}
+
+.ud-trend-scroll {
+    scroll-snap-type: x proximity;
+}
+
+.ud-trend-current-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: #4361ee;
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    vertical-align: middle;
+}
+
+/* ---------------------------------------------------------------------
+   Combined Impact + Feedback card (right column)
+--------------------------------------------------------------------- */
+
+.ud-impact-feedback-card {
+    display: flex;
+    flex-direction: column;
+    padding: 24px 24px 4px;
+}
+
+.ud-if-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.ud-if-section .chart-header {
+    margin-bottom: 16px;
+}
+
+.ud-if-section-feedback {
+    padding-bottom: 20px;
+}
+
+.ud-if-divider {
+    height: 1px;
+    margin: 4px 0 20px;
+    background: #edf0f5;
+}
+
+.ud-compact-pie-content {
+    min-height: unset;
+    gap: 28px;
+}
+
+.ud-compact-pie-content .pie-chart {
+    width: 150px;
+    height: 150px;
+}
+
+.ud-compact-pie-content .pie-chart::after,
+.ud-compact-pie-content .pie-center {
+    width: 92px;
+    height: 92px;
+}
+
+.ud-compact-pie-content .pie-center strong {
+    font-size: 22px;
+}
+
+.ud-compact-pie-content .pie-legend {
+    min-width: 150px;
+}
+
+.ud-compact-pie-content .legend-item {
+    padding: 8px 0;
+    font-size: 12px;
+}
+
+.ud-compact-feedback-list {
+    padding: 0 0 20px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: 220px;
+    gap: 8px;
+}
+
+.ud-compact-feedback-list .feedback-item {
+    padding: 9px 12px;
+}
+
+.ud-compact-feedback-list .feedback-empty {
+    min-height: 80px;
+    padding: 12px;
+}
+
+
+/* ---------------------------------------------------------------------
+   Responsive tweaks for the new layout
+--------------------------------------------------------------------- */
+
+@media (max-width: 1199px) {
+
+    .ud-compact-pie-content {
+        gap: 20px;
+    }
+
+    .ud-compact-pie-content .pie-chart {
+        width: 130px;
+        height: 130px;
+    }
+
+    .ud-compact-pie-content .pie-chart::after,
+    .ud-compact-pie-content .pie-center {
+        width: 80px;
+        height: 80px;
+    }
+
+}
+
+@media (max-width: 767px) {
+
+    .ud-impact-feedback-card {
+        padding: 18px 18px 4px;
+    }
+
+    .ud-compact-pie-content {
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .ud-compact-pie-content .pie-legend {
+        width: 100%;
+        order: 2;
+    }
+
+    .ud-compact-feedback-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ud-trend-scroll-hint {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 4px;
+    }
+
+}
+
+@media (max-width: 480px) {
+
+    .ud-compact-feedback-list {
+        grid-template-columns: 1fr;
     }
 
 }

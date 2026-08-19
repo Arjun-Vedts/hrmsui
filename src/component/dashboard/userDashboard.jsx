@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./dashboard.css";
 import {
+    getRequisitionPending,
     getRequisitionUserDashboardCount,
     getRequisitionUserYearlyTrend,
+    getUserEvaluationCount,
 } from "../../service/dashboard.service";
 
 /*
@@ -52,6 +54,12 @@ const getFinancialYearDates = (financialYear) => {
     };
 };
 
+// Extracts the starting year (number) out of a "YYYY-YYYY" financial year string.
+const financialYearStart = (financialYear) => {
+    const start = parseInt(String(financialYear).split("-")[0], 10);
+    return Number.isNaN(start) ? null : start;
+};
+
 const mapDashboardResponse = (raw) => {
     if (!raw) return null;
 
@@ -81,40 +89,86 @@ const mapYearlyTrend = (raw) => {
     }));
 };
 
+const IMPACT_TYPES = ["E", "VG", "G", "M", "N"];
+
+const IMPACT_COLORS = {
+    E: "#198754",   // Excellent
+    VG: "#0d6efd",  // Very Good
+    G: "#20c997",   // Good
+    M: "#ffc107",   // Margin
+    N: "#dc3545",   // Nil
+};
+
+const IMPACT_LABELS = {
+    E: "Excellent",
+    VG: "Very Good",
+    G: "Good",
+    M: "Margin",
+    N: "Nil",
+};
+
 const UserDashboard = () => {
 
     const empId = localStorage.getItem("empId");
 
     const [financialYear, setFinancialYear] = useState(getCurrentFinancialYear());
     const [dashboardData, setDashboardData] = useState(null);
+    const [evaluationData, setEvaluationData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
+    const [pendingFeedback, setPendingFeedback] = useState([]);
     const [yearlyTrend, setYearlyTrend] = useState([]);
     const [trendLoading, setTrendLoading] = useState(false);
     const [trendError, setTrendError] = useState(null);
 
     const financialYears = generateFinancialYears();
+    const currentFinancialYear = useMemo(() => getCurrentFinancialYear(), []);
+
+    const trendScrollRef = useRef(null);
 
     const fetchDashboardData = async (year) => {
-
         setLoading(true);
         setError(null);
 
         try {
             const { startDate, endDate } = getFinancialYearDates(year);
-            const response = await getRequisitionUserDashboardCount(
-                empId,
-                startDate,
-                endDate
+
+            const [dashboardResponse, pendingResponse, evaluationResponse] =
+                await Promise.all([
+                    getRequisitionUserDashboardCount(
+                        empId,
+                        startDate,
+                        endDate
+                    ),
+                    getRequisitionPending(
+                        empId,
+                        startDate,
+                        endDate
+                    ),
+                    getUserEvaluationCount(
+                        startDate,
+                        endDate
+                    ),
+                ]);
+
+            setDashboardData(
+                mapDashboardResponse(dashboardResponse)
             );
-            setDashboardData(mapDashboardResponse(response));
+
+            setPendingFeedback(pendingResponse || []);
+            setEvaluationData(evaluationResponse || {});
+
         } catch (err) {
             console.error("Dashboard Error:", err);
+
             setError(
                 "Couldn't load the dashboard right now. Please try again."
             );
+
             setDashboardData(null);
+            setEvaluationData(null);
+
         } finally {
             setLoading(false);
         }
@@ -152,11 +206,22 @@ const UserDashboard = () => {
         fetchYearlyTrend();
     }, []);
 
+    const visibleYearlyTrend = useMemo(() => {
+        const currentStart = financialYearStart(currentFinancialYear);
+
+        return yearlyTrend.filter((row) => {
+            const rowStart = financialYearStart(row.financialYear);
+            if (rowStart === null || currentStart === null) return true;
+            return rowStart <= currentStart;
+        });
+    }, [yearlyTrend, currentFinancialYear]);
+
+
     const maxTrendValue = useMemo(() => {
 
-        if (!yearlyTrend.length) return 1;
+        if (!visibleYearlyTrend.length) return 1;
 
-        const values = yearlyTrend.flatMap((row) => [
+        const values = visibleYearlyTrend.flatMap((row) => [
             row.requisitions,
             row.attended,
             row.notAttended,
@@ -164,11 +229,28 @@ const UserDashboard = () => {
 
         return Math.max(...values, 1);
 
-    }, [yearlyTrend]);
+    }, [visibleYearlyTrend]);
 
     const hasTrendData =
-        yearlyTrend.length > 0 &&
-        yearlyTrend.some((row) => row.requisitions > 0);
+        visibleYearlyTrend.length > 0 &&
+        visibleYearlyTrend.some((row) => row.requisitions > 0);
+
+    // Once the chart has data, scroll it all the way to the right so the
+    // current financial year is the first thing in view.
+    useEffect(() => {
+        if (hasTrendData && trendScrollRef.current) {
+            trendScrollRef.current.scrollLeft =
+                trendScrollRef.current.scrollWidth;
+        }
+    }, [hasTrendData, visibleYearlyTrend.length]);
+
+    const impactTotal = useMemo(() => {
+        if (!evaluationData) return 0;
+        return Object.values(evaluationData).reduce(
+            (sum, value) => sum + value,
+            0
+        );
+    }, [evaluationData]);
 
     return (
         <div className="dashboard-wrapper">
@@ -271,12 +353,15 @@ const UserDashboard = () => {
 
 
             {/* ============================================
-                YEARLY TREND
+                YEARLY TREND (left)  +  IMPACT / FEEDBACK (right)
             ============================================ */}
 
             <div className="row g-4">
-                <div className="col-12">
-                    <div className="dashboard-card trend-card">
+
+                {/* ---------------- LEFT: Yearly trend ---------------- */}
+
+                <div className="col-12 col-xl-8">
+                    <div className="dashboard-card trend-card ud-trend-card">
 
                         <div className="chart-header">
                             <div>
@@ -284,8 +369,8 @@ const UserDashboard = () => {
                                     Requisitions Over the Years
                                 </h5>
                                 <span>
-                                    Last {TREND_YEARS} financial years —
-                                    total, attended and not attended
+                                    Up to {currentFinancialYear} — total,
+                                    attended and not attended
                                 </span>
                             </div>
                         </div>
@@ -308,7 +393,7 @@ const UserDashboard = () => {
                             </div>
                         )}
 
-                        {trendLoading && !yearlyTrend.length && !trendError && (
+                        {trendLoading && !visibleYearlyTrend.length && !trendError && (
                             <div className="skeleton-block skeleton-panel" />
                         )}
 
@@ -317,9 +402,10 @@ const UserDashboard = () => {
                             hasTrendData ? (
 
                                 <YearlyTrendChart
-                                    data={yearlyTrend}
+                                    data={visibleYearlyTrend}
                                     maxValue={maxTrendValue}
-                                    currentYear={financialYear}
+                                    currentYear={currentFinancialYear}
+                                    scrollRef={trendScrollRef}
                                 />
 
                             ) : (
@@ -332,8 +418,8 @@ const UserDashboard = () => {
                                         No historical data yet
                                     </p>
                                     <p className="course-empty-subtitle">
-                                        Nothing has been recorded in the
-                                        last {TREND_YEARS} financial years.
+                                        Nothing has been recorded up to
+                                        {" "}{currentFinancialYear}.
                                     </p>
                                 </div>
 
@@ -343,6 +429,129 @@ const UserDashboard = () => {
 
                     </div>
                 </div>
+
+                {/* ---------------- RIGHT: Impact + Feedback (same card) ---------------- */}
+
+                <div className="col-12 col-xl-4">
+
+                    <div className="dashboard-card ud-impact-feedback-card">
+
+                        {/* Impact Chart */}
+                        <div className="ud-if-section">
+
+                            <div className="chart-header">
+
+                                <div>
+                                    <h5>
+                                        Impact of Requisitions
+                                    </h5>
+
+                                    <span>
+                                        Impact wise requisition count
+                                    </span>
+                                </div>
+
+                                <div className="chart-total blue-text">
+                                    {impactTotal}
+                                </div>
+
+                            </div>
+
+                            <div className="pie-content ud-compact-pie-content">
+
+                                <PieChart
+                                    data={evaluationData}
+                                    total={impactTotal}
+                                    keys={IMPACT_TYPES}
+                                    colors={IMPACT_COLORS}
+                                />
+
+                                <PieLegend
+                                    data={evaluationData}
+                                    total={impactTotal}
+                                    keys={IMPACT_TYPES}
+                                    colors={IMPACT_COLORS}
+                                    labels={IMPACT_LABELS}
+                                />
+
+                            </div>
+
+                        </div>
+
+                        <div className="ud-if-divider" />
+
+                        {/* Feedback Pending */}
+                        <div className="ud-if-section ud-if-section-feedback">
+
+                            <div className="chart-header">
+
+                                <div>
+                                    <h5>
+                                        Feedback Pending
+                                    </h5>
+
+                                    <span>
+                                        Requisitions awaiting feedback
+                                    </span>
+                                </div>
+
+                                <div className="chart-total red-text">
+                                    {pendingFeedback?.length || 0}
+                                </div>
+
+                            </div>
+
+
+                            <div className="feedback-list ud-compact-feedback-list">
+
+                                {pendingFeedback?.length > 0 ? (
+
+                                    pendingFeedback.map((item) => (
+
+                                        <div
+                                            className="feedback-item"
+                                            key={item.requisitionId}
+                                        >
+
+                                            <div className="feedback-req-info">
+
+                                                <span className="feedback-label">
+                                                    Requisition No.
+                                                </span>
+
+                                                <strong className="feedback-req-no">
+                                                    {item.requisitionNumber}
+                                                </strong>
+
+                                            </div>
+
+                                        </div>
+
+                                    ))
+
+                                ) : (
+
+                                    <div className="feedback-empty">
+
+                                        <span className="feedback-empty-icon">
+                                            ✓
+                                        </span>
+
+                                        <span>
+                                            No feedback pending
+                                        </span>
+
+                                    </div>
+
+                                )}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
             </div>
 
         </div>
@@ -351,6 +560,118 @@ const UserDashboard = () => {
 
 export default UserDashboard;
 
+const PieChart = ({ data, total, keys = IMPACT_TYPES, colors = IMPACT_COLORS }) => {
+    if (!total) {
+
+        return (
+
+            <div className="pie-wrapper">
+                <div className="pie-chart pie-empty">
+                    <div className="pie-center">
+                        <strong>0</strong>
+                        <small>
+                            Total
+                        </small>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+
+    let current = 0;
+
+    const segments = keys.map((key) => {
+        const value = data[key] || 0;
+        const percentage = (value / total) * 100;
+        const start = current;
+        current += percentage;
+        return `${colors[key]} ${start}% ${current}%`;
+    });
+
+    const gradient = `conic-gradient(${segments.join(", ")})`;
+
+    return (
+        <div className="pie-wrapper">
+            <div
+                className="pie-chart"
+                style={{
+                    background: gradient,
+                }}
+            >
+                <div className="pie-center">
+                    <strong>
+                        {total}
+                    </strong>
+                    <small>
+                        Total
+                    </small>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+const PieLegend = ({
+    data,
+    total,
+    keys = IMPACT_TYPES,
+    colors = IMPACT_COLORS,
+    labels = {},
+}) => {
+
+    return (
+        <div className="pie-legend">
+
+            {keys.map((key) => {
+
+                const value = data?.[key] || 0;
+
+                const percentage = total > 0
+                    ? ((value / total) * 100).toFixed(1)
+                    : "0.0";
+
+                return (
+                    <div
+                        className="legend-item"
+                        key={key}
+                    >
+
+                        <div className="legend-left">
+
+                            <span
+                                className="legend-dot"
+                                style={{
+                                    backgroundColor: colors[key],
+                                }}
+                            />
+
+                            <span>
+                                {labels[key] || key}
+                            </span>
+
+                        </div>
+
+                        <div className="legend-value">
+
+                            <strong>
+                                {value}
+                            </strong>
+
+                            <small>
+                                {percentage}%
+                            </small>
+
+                        </div>
+
+                    </div>
+                );
+            })}
+
+        </div>
+    );
+};
 
 const SummaryCard = ({ colorClass, icon, label, value }) => (
 
@@ -380,10 +701,10 @@ const SummaryCard = ({ colorClass, icon, label, value }) => (
 
 
 /* =============================================================
-   YEARLY TREND — vertical grouped bar chart
+   YEARLY TREND — horizontally scrollable, vertical grouped bar chart
 ============================================================= */
 
-const YearlyTrendChart = ({ data, maxValue, currentYear }) => (
+const YearlyTrendChart = ({ data, maxValue, currentYear, scrollRef }) => (
 
     <>
 
@@ -407,12 +728,18 @@ const YearlyTrendChart = ({ data, maxValue, currentYear }) => (
 
             ))}
 
+            {data.length > 5 && (
+                <span className="ud-trend-scroll-hint">
+                    ⟷ scroll for earlier years
+                </span>
+            )}
+
         </div>
 
 
         {/* Chart */}
 
-        <div className="trend-chart-wrapper">
+        <div className="trend-chart-wrapper ud-trend-scroll" ref={scrollRef}>
 
             <div className="trend-chart">
 
@@ -469,6 +796,11 @@ const YearlyTrendChart = ({ data, maxValue, currentYear }) => (
 
                         <div className="trend-year-label">
                             {row.financialYear}
+                            {row.financialYear === currentYear && (
+                                <span className="ud-trend-current-badge">
+                                    Current
+                                </span>
+                            )}
                         </div>
 
                     </div>
