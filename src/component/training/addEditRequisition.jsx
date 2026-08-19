@@ -1,5 +1,4 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
-import Navbar from "../navbar/Navbar";
 import DatePicker from "react-datepicker";
 import Select from "react-select";
 import { useEffect, useRef, useState } from "react";
@@ -474,8 +473,6 @@ const AddEditRequisition = () => {
 
     return (
         <div>
-            <Navbar />
-
             <h3 className="fancy-heading mt-3">
                 {requisitionId ? "Edit Requisition" : "Add Requisition"}
                 <span className="underline-glow">

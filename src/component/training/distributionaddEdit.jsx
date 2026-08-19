@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react"
-import Navbar from '../navbar/Navbar';
 import { useNavigate, useLocation } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
@@ -275,7 +274,6 @@ const AddEditDistributionComponent = () => {
       };
       return (
             <div>
-                  <Navbar />
                   <h3 className="fancy-heading mt-3">
                         {isEdit ? "Edit Distribution" : "Add Distribution"}
                         <span className="underline-glow">

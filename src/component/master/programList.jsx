@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import Datatable from "../../datatable/Datatable";
-import Navbar from "../navbar/Navbar";
 import { addEligible, addProgram, editProgram, getAgencies, getCourseList, getCourseTypeList, getEligibilities } from "../../service/training.service";
 import Swal from "sweetalert2";
 import { format, set } from "date-fns";
@@ -142,8 +141,6 @@ const ProgramList = () => {
 
     return (
         <div>
-            <Navbar />
-
             <h3 className="fancy-heading mt-3">
                 Course List
                 <span className="underline-glow">

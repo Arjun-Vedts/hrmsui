@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getEmployees, handleApiError } from "../../service/master.service";
 import { getSponsorshipDataById } from "../../service/sponsorship.service";
-import Navbar from "../navbar/Navbar";
 import Select from "react-select";
 import * as Yup from "yup";
 import { ErrorMessage, Field, Form, Formik } from "formik";
@@ -235,8 +234,6 @@ const HigherDegreeAddEdit = () => {
 
     return (
         <div>
-            <Navbar />
-
             <h3 className="fancy-heading mt-3">
                 {isEdit ? "Edit" : "Add"} {degreeType === "MTECH" ? "M.Tech" : "Ph.D"} Sponsorship
                 <span className="underline-glow">

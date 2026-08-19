@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Navbar from "../navbar/Navbar";
 import Datatable from "../../datatable/Datatable";
 import Swal from "sweetalert2";
 import { getDesignation } from "../../service/master.service";
@@ -42,8 +41,6 @@ const Designation = () => {
 
     return (
         <div>
-            <Navbar />
-
             <h3 className="fancy-heading mt-3">
                 Designation List
                 <span className="underline-glow">

@@ -1,4 +1,3 @@
-import Navbar from "../navbar/Navbar";
 import { useState, useEffect } from "react";
 import { getsponsorshipList } from "../../service/sponsorship.service";
 import Datatable from "../../datatable/Datatable";
@@ -101,8 +100,6 @@ const HigherDegreeMtech = () => {
 
     return (
         <div>
-            <Navbar />
-
             <h3 className="fancy-heading mt-3">
                 Higher Degree M.Tech
                 <span className="underline-glow">

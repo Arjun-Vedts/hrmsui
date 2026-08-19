@@ -6,7 +6,6 @@ import { format, startOfYear } from "date-fns";
 import Swal from "sweetalert2";
 import AlertConfirmation from "../../common/AlertConfirmation.component";
 import DatePicker from "react-datepicker";
-import Navbar from "../navbar/Navbar";
 import { Tooltip } from "react-tooltip";
 import { FaEye } from "react-icons/fa6";
 import RequisitionPrint from "../print/requisition";
@@ -215,7 +214,6 @@ const SAHRTApprovalList = () => {
 
     return (
         <div>
-            <Navbar />
             <h3 className="fancy-heading mt-3">
                 Requisition Approved List
                 <span className="underline-glow">

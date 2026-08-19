@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import Datatable from "../../datatable/Datatable";
-import Navbar from "../navbar/Navbar";
 import { useLocation, useNavigate } from "react-router-dom";
 import { addReqAttendance, addReqConfirmation, forwardRequisition, getFeedbackList, getLabMasterData, getRequisitionPrint, getRequisitions, revokeRequisition } from "../../service/training.service";
 import Swal from "sweetalert2";
-import { format, startOfYear } from "date-fns";
+import { endOfYear, format, startOfYear } from "date-fns";
 import { Tooltip } from "react-tooltip";
 import { MdFeedback } from "react-icons/md";
 import { FaEdit, FaInfoCircle, FaUserCheck } from "react-icons/fa";
@@ -35,7 +34,7 @@ const Requisition = () => {
     const [reqData, setShowReqData] = useState(null);
     const [selectedTab, setSelectedTab] = useState(location.state?.selectedTab || "free");
     const fromDate = startOfYear(new Date());
-    const toDate = new Date();
+    const toDate = endOfYear(new Date());
     const [fromDateSel, setFromDateSel] = useState(fromDate);
     const [toDateSel, setToDateSel] = useState(toDate);
     const [employeeList, setEmployeeList] = useState([]);
@@ -623,8 +622,6 @@ const Requisition = () => {
 
     return (
         <div>
-            <Navbar />
-
             <h3 className="fancy-heading mt-3">
                 Requisition List
                 <span className="underline-glow">

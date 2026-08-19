@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import Datatable from "../../datatable/Datatable";
-import Navbar from "../navbar/Navbar";
 import { addOrganizer, editOrganizer, getAgencies } from "../../service/training.service";
 import Swal from "sweetalert2";
 import { Tooltip } from "react-tooltip";
@@ -156,8 +155,6 @@ const OrganizerList = () => {
 
     return (
         <div>
-            <Navbar />
-
             <h3 className="fancy-heading mt-3">
                 Organizer List
                 <span className="underline-glow">

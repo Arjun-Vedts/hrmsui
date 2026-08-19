@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import Datatable from "../../datatable/Datatable";
-import Navbar from "../navbar/Navbar";
 import { useNavigate } from "react-router-dom";
-import { acceptReqFeedback, feedbackFileDownload, getFeedbackList, getFeedbackPrint, getLabMasterData } from "../../service/training.service";
+import { acceptReqFeedback, feedbackFileDownload, getFeedbackList, getFeedbackListByDateRange, getFeedbackPrint, getLabMasterData } from "../../service/training.service";
 import Swal from "sweetalert2";
-import { format } from "date-fns";
+import { endOfYear, format, startOfYear } from "date-fns";
 import { Tooltip } from "react-tooltip";
 import FeedbackPrint from "../print/feedbackPrint";
 import { FaDownload, FaEye } from "react-icons/fa6";
@@ -14,11 +13,17 @@ import Select from "react-select";
 import { MdLibraryAddCheck } from "react-icons/md";
 import AlertConfirmation from "../../common/AlertConfirmation.component";
 import { usePermission } from "../../common/usePermission";
+import DatePicker from "react-datepicker";
 
 
 const FeedbackList = () => {
 
     const { canView, canAdd, canEdit, canDelete } = usePermission("FeedBack");
+
+    const fromDate = startOfYear(new Date());
+    const toDate = endOfYear(new Date());
+    const [fromDateSel, setFromDateSel] = useState(fromDate);
+    const [toDateSel, setToDateSel] = useState(toDate);
 
     const [feedbackList, setFeedbackList] = useState([]);
     const [employeeList, setEmployeeList] = useState([]);
@@ -37,12 +42,12 @@ const FeedbackList = () => {
     }, []);
 
     useEffect(() => {
-        if (selectedEmpId !== null && selectedEmpId !== undefined) {
-            fetchFeedbackData(selectedEmpId);
+        if (selectedEmpId !== null && selectedEmpId !== undefined && fromDateSel && toDateSel) {
+            fetchFeedbackData(selectedEmpId, format(fromDateSel, "yyyy-MM-dd"), format(toDateSel, "yyyy-MM-dd"));
         }
-    }, [selectedEmpId]);
+    }, [selectedEmpId, fromDateSel, toDateSel]);
 
-    const fetchFeedbackData = async (employeeId) => {
+    const fetchFeedbackData = async (employeeId, fromDate, toDate) => {
         let apiEmpId = employeeId;
         let apiRole = roleName;
 
@@ -59,7 +64,7 @@ const FeedbackList = () => {
         }
 
         try {
-            const response = await getFeedbackList(apiEmpId, apiRole);
+            const response = await getFeedbackListByDateRange(apiEmpId, apiRole, fromDate, toDate);
             setFeedbackList(response?.data || []);
         } catch (error) {
             console.error("Error fetching feedback list:", error);
@@ -268,8 +273,6 @@ const FeedbackList = () => {
 
     return (
         <div>
-            <Navbar />
-
             <h3 className="fancy-heading mt-3">
                 Feedback List
                 <span className="underline-glow">
@@ -279,22 +282,70 @@ const FeedbackList = () => {
                 </span>
             </h3>
 
-            <div className="d-flex justify-content-end align-items-center flex-wrap">
-                <div className="d-flex align-items-center me-3 mb-2">
-                    <label className="font-label fw-bold me-3 mb-0">Employee :</label>
-                    <div style={{ width: '400px' }} className="text-start">
-                        <Select
-                            options={employeeOptions}
-                            value={employeeOptions.find((item) => item.value === selectedEmpId) || null}
-                            onChange={(selectedOption) => {
-                                const selectedValue = selectedOption ? selectedOption.value : 0; // default to 0
-                                setSelectedEmpId(selectedValue);
-                            }}
-                            placeholder="Select Employee"
-                            isSearchable
-                        />
-                    </div>
+            <div className="d-flex flex-wrap justify-content-end align-items-end gap-3 mt-4 me-2">
+
+                {/* Employee */}
+                <div className="d-flex align-items-center gap-2">
+                    <label className="fw-bold mb-0 text-nowrap">Employee :</label>
+                    <Select
+                        options={employeeOptions}
+                        value={employeeOptions.find((item) => item.value === selectedEmpId) || null}
+                        onChange={(selectedOption) => {
+                            const selectedValue = selectedOption ? selectedOption.value : 0; // default to 0
+                            setSelectedEmpId(selectedValue);
+                        }}
+                        isSearchable
+                        styles={{
+                            container: (provided) => ({
+                                ...provided,
+                                minWidth: "180px",
+                                width: "100%",
+                            }),
+                            singleValue: (provided) => ({
+                                ...provided,
+                                textAlign: "left",
+                            }),
+                        }}
+                        menuPortalTarget={document.body}
+                    />
                 </div>
+
+                {/* From Date */}
+                <div className="d-flex align-items-center gap-2">
+                    <label className="fw-bold mb-0 text-nowrap">From :</label>
+                    <DatePicker
+                        selected={fromDateSel}
+                        onChange={(newValue) => setFromDateSel(newValue)}
+                        className="form-control"
+                        placeholderText="From Date"
+                        dateFormat="dd-MM-yyyy"
+                        showYearDropdown
+                        showMonthDropdown
+                        dropdownMode="select"
+                        onKeyDown={(event) => event.preventDefault()}
+                        portalId="root"
+                        popperPlacement="bottom-end"
+                    />
+                </div>
+
+                {/* To Date */}
+                <div className="d-flex align-items-center gap-2">
+                    <label className="fw-bold mb-0 text-nowrap">To :</label>
+                    <DatePicker
+                        selected={toDateSel}
+                        onChange={(newValue) => setToDateSel(newValue)}
+                        className="form-control"
+                        placeholderText="To Date"
+                        dateFormat="dd-MM-yyyy"
+                        showYearDropdown
+                        showMonthDropdown
+                        dropdownMode="select"
+                        onKeyDown={(event) => event.preventDefault()}
+                        portalId="root"
+                        popperPlacement="bottom-end"
+                    />
+                </div>
+
             </div>
 
             <div id="card-body" className="p-2 mt-2">

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Navbar from "../navbar/Navbar";
 import styles from "./AllReportsTemplate.module.css";
 import { Tooltip } from "react-tooltip";
 import { FiMenu, FiSearch, FiFileText, FiChevronLeft } from "react-icons/fi";
@@ -62,8 +61,6 @@ const AllReportsTemplate = () => {
 
     return (
         <>
-            <Navbar />
-
             <div className={styles.pageWrapper}>
                 <div className={styles.mainLayout}>
                     {/* Sidebar */}

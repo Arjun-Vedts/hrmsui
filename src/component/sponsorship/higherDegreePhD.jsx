@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { getsponsorshipList } from "../../service/sponsorship.service";
-import Navbar from "../navbar/Navbar";
 import Datatable from "../../datatable/Datatable";
 import { useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
@@ -102,7 +101,6 @@ const HigherDegreePhD = () => {
 
     return (
         <div>
-            <Navbar />
             <h3 className="fancy-heading mt-3">
                 Higher Degree Ph.D
                 <span className="underline-glow">

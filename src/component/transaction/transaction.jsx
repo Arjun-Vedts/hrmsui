@@ -1,4 +1,3 @@
-import Navbar from '../navbar/Navbar';
 import './Transaction.css';
 import { getReqTransactionList } from '../../service/training.service';
 import { useEffect, useState } from 'react';
@@ -189,7 +188,6 @@ const Transaction = () => {
 
     return (
         <>
-            {/* <Navbar /> */}
             <div className="container mt-4">
                 <div className="row justify-content-center">
 

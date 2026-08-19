@@ -4,7 +4,6 @@ import DatePicker from "react-datepicker";
 import Select from "react-select";
 import Datatable from "../../datatable/Datatable";
 import { getAuditStampingList, getUserManagerList } from "../../service/admin.service";
-import Navbar from "../navbar/Navbar";
 
 
 const AuditStampingList = () => {
@@ -103,7 +102,6 @@ const AuditStampingList = () => {
 
   return (
     <div >
-      <Navbar />
       <h3 className="fancy-heading mt-3">
         Audit Stamping List
         <span className="underline-glow">

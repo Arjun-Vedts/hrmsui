@@ -18,7 +18,7 @@ export const getCourseDashboardCount = async (startDate, endDate) => {
 
 export const getRequisitionDashboardCount = async (startDate, endDate) => {
     try {
-        return (await axios.get(`${API_URL}api/dashboard/requisition-filter`, {
+        return (await axios.get(`${API_URL}api/dashboard/requisition`, {
             params: { startDate, endDate },
             headers: { 'Content-Type': 'application/json', ...authHeader() }
         })).data;
@@ -30,12 +30,48 @@ export const getRequisitionDashboardCount = async (startDate, endDate) => {
 
 export const getRequisitionUserDashboardCount = async (empId, startDate, endDate) => {
     try {
-        return (await axios.get(`${API_URL}api/dashboard/user-requisition-filter`, {
+        return (await axios.get(`${API_URL}api/dashboard/user-requisition`, {
             params: { empId, startDate, endDate },
             headers: { 'Content-Type': 'application/json', ...authHeader() }
         })).data;
     } catch (error) {
         console.error('Error occurred in getRequisitionUserDashboardCount():', error);
+        throw error;
+    }
+};
+
+export const getRequisitionPending = async (empId, startDate, endDate) => {
+    try {
+        return (await axios.get(`${API_URL}api/dashboard/user-req-pending`, {
+            params: { empId, startDate, endDate },
+            headers: { 'Content-Type': 'application/json', ...authHeader() }
+        })).data;
+    } catch (error) {
+        console.error('Error occurred in getRequisitionPending():', error);
+        throw error;
+    }
+};
+
+export const getUserEvaluationCount = async (startDate, endDate) => {
+    try {
+        return (await axios.get(`${API_URL}api/dashboard/user-evaluation`, {
+            params: { startDate, endDate },
+            headers: { 'Content-Type': 'application/json', ...authHeader() }
+        })).data;
+    } catch (error) {
+        console.error('Error occurred in getUserEvaluationCount():', error);
+        throw error;
+    }
+};
+
+export const getRequisitionUserYearlyTrend = async (empId, years) => {
+    try {
+        return (await axios.get(`${API_URL}api/dashboard/user/yearly-trend`, {
+            params: { empId, years },
+            headers: { 'Content-Type': 'application/json', ...authHeader() }
+        })).data;
+    } catch (error) {
+        console.error('Error occurred in getRequisitionUserYearlyTrend():', error);
         throw error;
     }
 };

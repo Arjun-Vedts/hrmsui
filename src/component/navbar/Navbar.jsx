@@ -238,7 +238,6 @@ const roleMap = JSON.parse(localStorage.getItem("hindiRoleMap"));
   const fetchHeaderModuleList = async (role) => {
     try {
       const moduleListResponse = await getHeaderModuleList(role);
-
       setHeaderModuleList(moduleListResponse);
     } catch (error) {
       console.error("Error fetching Header Module list:", error);
@@ -315,19 +314,19 @@ const roleMap = JSON.parse(localStorage.getItem("hindiRoleMap"));
   }, []);
 
   const fetchAppUrls = async () => {
-    try {
-      const urls = await getReactAppUrls();
-      const urlMap = {};
-      urls.forEach((app) => {
-        if (app.isActive === 1) {
-          urlMap[app.appCode] = app.appUrl;
+        try {
+            const urls = await getReactAppUrls();
+            const urlMap = {};
+            urls.forEach(app => {
+                if (app.isActive === 1) {
+                    urlMap[app.appCode] = app.appUrl;
+                }
+            });
+            setAppUrls(urlMap);
+        } catch (error) {
+            console.error("Failed to fetch app URLs:", error);
         }
-      });
-      setAppUrls(urlMap);
-    } catch (error) {
-      console.error("Failed to fetch app URLs:", error);
-    }
-  };
+    };
 
   const apps = [
     {
@@ -402,56 +401,123 @@ const roleMap = JSON.parse(localStorage.getItem("hindiRoleMap"));
   }));
 
   const handleAppLaunch = async (app) => {
-    setIsLauncherOpen(false);
+        setIsLauncherOpen(false);
 
-    const hasAccess = await checkUserProjectAccess(app.code);
-    if (!hasAccess) {
-      Swal.fire({
-        title: "Access Denied",
-        text: `You do not have access to ${app.code} application.`,
-        icon: "error",
-        confirmButtonColor: "#3085d6",
-        confirmButtonText: "Okay",
-        footer: "<span>Contact System Admin if you need access.</span>",
-        showClass: {
-          popup: "animate__animated animate__fadeInDown",
-        },
-        hideClass: {
-          popup: "animate__animated animate__fadeOutUp",
-        },
-      });
-      return;
-    }
+        // Synchronous open prevents browser popup blockers
+        const needsNewTab = app.action === 'open' || app.url !== '/under-development';
+        const pendingWindow = needsNewTab ? window.open('', '_blank') : null;
 
-    const targetUrl = app.url;
-
-    if (app.action === "open") {
-      const userData = localStorage.getItem("user");
-      if (!userData) return;
-
-      const appWindow = window.open(
-        `${targetUrl}/${app.launchpath}?${app.code.toLowerCase()}=true`,
-        "_blank",
-      );
-
-      let count = 0;
-      const checkInterval = setInterval(() => {
-        if (appWindow && count < 10) {
-          appWindow.postMessage(
-            { type: "LOGIN_SUCCESS", user: JSON.parse(userData) },
-            targetUrl,
-          );
-          count++;
-        } else {
-          clearInterval(checkInterval);
+        const hasAccess = await checkUserProjectAccess(app.code);
+        if (!hasAccess) {
+            pendingWindow?.close();
+            Swal.fire({
+                title: 'Access Denied',
+                text: `You do not have access to ${app.code} application.`,
+                icon: 'error',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Okay',
+                footer: '<span>Contact System Admin if you need access.</span>',
+                showClass: {
+                    popup: 'animate__animated animate__fadeInDown'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutUp'
+                }
+            });
+            return;
         }
-      }, 1000);
-    } else if (targetUrl === "/under-development") {
-      window.location.href = targetUrl;
-    } else {
-      window.open(app.url, "_blank", "noopener,noreferrer");
-    }
-  };
+
+        const targetUrl = app.url;
+
+        if (app.action === 'open') {
+            const userData = localStorage.getItem("user");
+            if (!userData) {
+                pendingWindow?.close();
+                return;
+            }
+
+            if (pendingWindow) {
+                pendingWindow.location.href = `${targetUrl}/${app.launchpath}?${app.code.toLowerCase()}=true`;
+            }
+
+            // Handshake State (Scoped to this specific launch)
+            let delivered = false;
+            let attempts = 0;
+            const maxAttempts = 10;
+            let checkInterval;
+
+            // 1. Listen for the child's acknowledgment
+            const onAck = (event) => {
+                // Security: Validate origin strictly
+                if (event.origin !== new URL(targetUrl).origin) return;
+                
+                if (event.data?.type === "LOGIN_ACK") {
+                    delivered = true;
+                    clearInterval(checkInterval);
+                    window.removeEventListener("message", onAck);
+                }
+            };
+
+            window.addEventListener("message", onAck);
+
+            // 2. Poll the child window until acknowledged or timed out
+            checkInterval = setInterval(() => {
+                attempts++;
+                
+                if (delivered || attempts > maxAttempts || !pendingWindow || pendingWindow.closed) {
+                    clearInterval(checkInterval);
+                    window.removeEventListener("message", onAck);
+                    
+                    if (!delivered && attempts > maxAttempts) {
+                        Swal.fire({
+                            title: 'Sign-in Failed',
+                            text: `Could not complete sign-in to ${app.code}. Please try again.`,
+                            icon: 'error',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'Okay',
+                            showClass: {
+                                popup: 'animate__animated animate__fadeInDown'
+                            },
+                            hideClass: {
+                                popup: 'animate__animated animate__fadeOutUp'
+                            }
+                        });
+                        // showAuthError(`Could not complete sign-in to ${app.code}. Please try again.`);
+                    }
+                    return;
+                }
+
+                // 3. Send the payload
+                try {
+                    pendingWindow.postMessage(
+                    { type: "LOGIN_SUCCESS", user: JSON.parse(userData)},
+                    targetUrl
+                    );
+                } catch (e) {
+                    // Window may have been closed or navigating, safely ignore
+                }
+            }, 1000);
+        } else if (targetUrl === '/under-development') {
+            pendingWindow?.close();
+            window.location.href = targetUrl;
+        } else if (pendingWindow) {
+            pendingWindow.opener = null;
+            pendingWindow.location.href = app.url;
+        }
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            // Close if the click is not on the launcher button or the dropdown
+            if (isLauncherOpen && !event.target.closest(`.launcher-btn`) && !event.target.closest(`.app-launcher-dropdown`)) {
+                setIsLauncherOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [isLauncherOpen]);
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -476,13 +542,12 @@ const roleMap = JSON.parse(localStorage.getItem("hindiRoleMap"));
         return;
       }
       const userData = await getUserById(loginId);
-      console.log('user data ******',userData)
-         const roles = userData.data.roleNames || [];
-        const hindiRoles = userData.data.hindiRoleNames || [];
+      const roles = userData.data.roleNames || [];
+      const hindiRoles = userData.data.hindiRoleNames || [];
 
-         const hindiRoleMap = {};
+      const hindiRoleMap = {};
 
-         roles.forEach((role, i) => {hindiRoleMap[role] = hindiRoles[i];});
+      roles.forEach((role, i) => {hindiRoleMap[role] = hindiRoles[i];});
 
       if (userData?.data) {
         localStorage.setItem("roles", JSON.stringify(userData.data.roleNames));

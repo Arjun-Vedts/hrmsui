@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import Datatable from "../../datatable/Datatable";
-import Navbar from "../navbar/Navbar";
 import { getRolesList, getUserManagerList } from "../../service/admin.service";
 import { Tooltip } from "react-tooltip";
 import { FaEdit } from "react-icons/fa";
@@ -245,7 +244,6 @@ const UserManagerList = () => {
     if (!canView) {
         return (
             <div>
-                <Navbar />
                 <div className="p-4 text-center text-muted">You do not have permission to view this page.</div>
             </div>
         );
@@ -253,7 +251,6 @@ const UserManagerList = () => {
 
     return (
         <div>
-            <Navbar />
 
             <h3 className="fancy-heading mt-3">
                 User Manager List

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import Datatable from "../../datatable/Datatable";
 import { addYears, format, startOfYear } from "date-fns";
-import Navbar from "../navbar/Navbar";
 import { ErrorMessage, Form, Formik } from "formik";
 import DatePicker from "react-datepicker";
 import * as Yup from "yup";
@@ -230,8 +229,6 @@ const HandingOverList = () => {
 
     return (
         <div>
-            <Navbar />
-
             <h3 className="fancy-heading mt-3">
                 Handing Over List
                 <span className="underline-glow">

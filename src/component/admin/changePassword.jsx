@@ -7,7 +7,6 @@ import { ErrorMessage, Field, Form, Formik } from "formik";
 import styles from "./ChangePassword.module.css";
 import { FaEye, FaEyeSlash, FaLock } from "react-icons/fa";
 import { updatePassWord } from "../../service/admin.service";
-import Navbar from "../navbar/Navbar";
 
 
 const ChangePassword = () => {
@@ -162,7 +161,6 @@ const ChangePassword = () => {
 
     return (
         <>
-            <Navbar />
             <div className={styles.wrapper}>
                 <div className={`${styles.card} shadow-lg`}>
 

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Navbar from "../navbar/Navbar";
 import Datatable from "../../datatable/Datatable";
 import "./masterPage.css";
 import Swal from "sweetalert2";
@@ -48,8 +47,6 @@ const Employee = () => {
 
     return (
         <div>
-            <Navbar />
-
             <h3 className="fancy-heading mt-3">
                 Employee List
                 <span className="underline-glow">

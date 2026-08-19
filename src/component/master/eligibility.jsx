@@ -1,7 +1,6 @@
 import { format } from "date-fns";
 import { usePermission } from "../../common/usePermission";
 import Datatable from "../../datatable/Datatable";
-import Navbar from "../navbar/Navbar";
 import { useEffect, useState } from "react";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import * as Yup from "yup";
@@ -121,8 +120,6 @@ const Eligibility = () => {
 
     return (
         <div>
-            <Navbar />
-
             <h3 className="fancy-heading mt-3">
                 Eligibility List
                 <span className="underline-glow">

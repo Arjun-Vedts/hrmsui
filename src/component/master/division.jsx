@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import Datatable from "../../datatable/Datatable";
-import Navbar from "../navbar/Navbar";
 import { getDivisions } from "../../service/master.service";
 
 const Division = () => {
@@ -42,8 +41,6 @@ const Division = () => {
 
     return (
         <div>
-            <Navbar />
-
             <h3 className="fancy-heading mt-3">
                 Division List
                 <span className="underline-glow">

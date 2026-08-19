@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import Navbar from '../navbar/Navbar'
 import { getCepList } from '../../service/training.service';
 import { useEffect } from 'react';
 import Datatable from "../../datatable/Datatable";
@@ -95,7 +94,6 @@ const CepComponent = () => {
 
     return (
         <div>
-            <Navbar />
             <div>
 
                 <h3 className="fancy-heading mt-3">

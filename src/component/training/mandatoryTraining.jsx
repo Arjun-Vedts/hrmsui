@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { usePermission } from "../../common/usePermission";
 import Datatable from "../../datatable/Datatable";
-import Navbar from "../navbar/Navbar";
 import { Tooltip } from "react-tooltip";
 import { FaEdit } from "react-icons/fa";
 import { format } from "date-fns";
@@ -215,7 +214,6 @@ const MandatoryTraining = () => {
 
     return (
         <div>
-            <Navbar />
 
             <h3 className="fancy-heading mt-3">
                 Mandatory Training List

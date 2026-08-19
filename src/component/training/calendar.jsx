@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Navbar from "../navbar/Navbar";
 import Datatable from "../../datatable/Datatable";
 import Select from "react-select";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
@@ -294,7 +293,6 @@ const Calendar = () => {
 
     return (
         <div>
-            <Navbar />
             <h3 className="fancy-heading mt-3">
                 Calendar List
                 <span className="underline-glow">
