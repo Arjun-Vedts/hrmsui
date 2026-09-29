@@ -6,7 +6,7 @@ import Select from "react-select";
 import Swal from "sweetalert2";
 import AlertConfirmation from "../../common/AlertConfirmation.component";
 import { addEvaluation, getEvaluationList, getEvaluationPrint, getLabMasterData, getRequisitions } from "../../service/training.service";
-import { format, getYear, parseISO } from "date-fns";
+import { format, getYear, isBefore, parseISO } from "date-fns";
 import "./Training.css";
 import { FaArrowRight } from "react-icons/fa";
 import { FaFilePdf } from "react-icons/fa6";
@@ -170,9 +170,15 @@ const Evaluation = () => {
             const isValidStatus = (r.status === "CO" || r.status === "FA") && r.isAttend === "Y";
             if (!isValidStatus) return false;
 
+            // if (labCode === "CAIR" && r.fromDate) {
+            //     const year = getYear(parseISO(r.fromDate));
+            //     if (year <= 2025) {
+            //         return false;
+            //     }
+            // }
+
             if (labCode === "CAIR" && r.fromDate) {
-                const year = getYear(parseISO(r.fromDate));
-                if (year <= 2025) {
+                if (isBefore(parseISO(r.fromDate), parseISO("2026-04-01"))) {
                     return false;
                 }
             }
@@ -262,32 +268,47 @@ const Evaluation = () => {
             }
 
             const response = await getEvaluationPrint(item.initiator);
+
             if (!response || !response.data) {
-                Swal.fire("No Data", "No evaluation data available to print.", "info");
+                Swal.fire("No Record Available", "No evaluation record is available for this employee.", "info");
                 return;
             }
 
             if (!response.data?.evaluation || response.data.evaluation.length === 0) {
-                Swal.fire(
-                    "Evaluation Pending",
-                    "The evaluation for this record has not been completed yet.",
-                    "info"
-                );
+                Swal.fire("Evaluation Pending", "The evaluation for this employee has not been completed yet.", "info");
                 return;
             }
 
             const labResponse = await getLabMasterData();
+
             if (!labResponse?.data) {
                 Swal.fire("Warning", "Lab details not found.", "warning");
                 return;
             }
 
             const empName = formatName();
+
             await EvaluationPrint(response.data, empName, labResponse.data);
 
         } catch (error) {
             console.error("Print Error:", error);
-            Swal.fire("Error", "Something went wrong while generating the PDF.", "error");
+
+            // Backend record not found
+            if (error?.response?.status === 404) {
+                Swal.fire(
+                    "No Record Available",
+                    error?.response?.data?.message ||
+                    "No evaluation record is available for this employee.",
+                    "info"
+                );
+                return;
+            }
+
+            Swal.fire(
+                "Error",
+                "Something went wrong while generating the PDF.",
+                "error"
+            );
         }
     };
 
