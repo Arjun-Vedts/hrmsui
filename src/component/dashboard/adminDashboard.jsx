@@ -9,7 +9,7 @@ const CADRES = [
     "DRDS",
     "DRTC",
     "Admin & Allied",
-    "Service Personnel",
+    // "Service Personnel",
     "Others",
 ];
 
@@ -17,7 +17,7 @@ const CADRE_COLORS = {
     "DRDS": "#4361ee",
     "DRTC": "#06b6d4",
     "Admin & Allied": "#f59e0b",
-    "Service Personnel": "#ec4899",
+    // "Service Personnel": "#ec4899",
     "Others": "#8b5cf6",
 };
 

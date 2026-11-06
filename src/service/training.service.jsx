@@ -75,7 +75,7 @@ export const calendarFileDownload = async (id, fileType) => {
 
 export const addProgram = async (data) => {
     try {
-        return (await axios.post(`${API_URL}api/training/add-course`, data, { headers: { 'Content-Type': 'application/json', ...authHeader() } })).data;
+        return (await axios.post(`${API_URL}api/training/add-course`, data, { headers: { 'Content-Type': 'multipart/form-data', ...authHeader() } })).data;
     } catch (error) {
         console.error('Error occurred in addProgram():', error);
         throw error;
@@ -84,7 +84,7 @@ export const addProgram = async (data) => {
 
 export const editProgram = async (data) => {
     try {
-        const response = await axios.put(`${API_URL}api/training/edit-course`, data, { headers: { 'Content-Type': 'application/json', ...authHeader() } });
+        const response = await axios.put(`${API_URL}api/training/edit-course`, data, { headers: { 'Content-Type': 'multipart/form-data', ...authHeader() } });
         return response.data;
     } catch (error) {
         console.error("Error updating program", error);
@@ -829,5 +829,35 @@ export const getLabMasterData = async (data) => {
     } catch (error) {
         console.error('Error occurred in getLabMasterData():', error);
         throw error;
+    }
+};
+
+export const courseBrochureFileDownload = async (courseId) => {
+    try {
+        const response = await axios.get(
+            `${API_URL}api/training/course-brochure/${courseId}`,
+            {
+                headers: authHeader(),
+                responseType: "blob"
+            }
+        );
+
+        const contentDisposition = response.headers["content-disposition"];
+        let fileName = "downloaded_file";
+
+        if (contentDisposition) {
+            const match = contentDisposition.match(/filename="?(.+?)"?$/);
+            if (match) {
+                fileName = match[1];
+            }
+        }
+
+        return {
+            data: response.data,
+            fileName,
+            contentType: response.headers["content-type"]
+        };
+    } catch (error) {
+        return { data: '0' };
     }
 };

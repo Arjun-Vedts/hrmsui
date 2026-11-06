@@ -4,78 +4,112 @@ import { authHeader } from './auth.header';
 import { authenticationDetails } from './admin.service';
 
 const API_URL = config.API_URL;
-const LABCODE = config.LABCODE;
 
 
 export const login = async (username, password) => {
   try {
-    let encryptedPassword = btoa(password);
-
-    // Add timestamp to prevent replay attacks
-    const timestamp = Date.now();
+    const normalizedUsername = username.trim();
 
     const loginData = {
-      username: username.trim(),
-      // password: ['CAIR', 'VEDTS'].includes(LABCODE) ? password : encryptedPassword,
-      password: LABCODE === 'CAIR' ? password : encryptedPassword,
-      // timestamp: timestamp
+      username: normalizedUsername,
+      password,
+      timestamp: new Date().toISOString(),
     };
 
     const response = await authenticationDetails(loginData);
+    const authData = response?.data;
 
+    // Default password: JWT is required for the change-password API.
+    if (authData?.statusCode === "DEFAULT_PASSWORD") {
+      if (!authData.token) {
+        throw new Error(
+          "Authentication succeeded, but no token was returned for changing your password."
+        );
+      }
 
-
-    if (response.data.data.token) {
       localStorage.setItem(
-        'user',
+        "user",
         JSON.stringify({
-          token: response.data.data.token,
-          username
+          token: authData.token,
+          username: normalizedUsername,
         })
       );
 
-      const roles = response.data.data.roles || [];
-      const hindiRoles = response.data.data.hindiRoles || [];
+      localStorage.setItem("username", normalizedUsername);
 
-      const hindiRoleMap = {};
+      localStorage.setItem(
+        "roles",
+        JSON.stringify(authData.roles || [])
+      );
 
-      roles.forEach((role, i) => {
-        hindiRoleMap[role] = hindiRoles[i];
-      });
-
-      localStorage.setItem('roles', JSON.stringify(response.data.data.roles || []))
-
-
-      localStorage.setItem("hindiRoleMap", JSON.stringify(hindiRoleMap));
-
-      const emp = await getUserDetails(username);
-
-      localStorage.setItem('username', username);
-      localStorage.setItem('loginId', emp?.data.loginId);
-      localStorage.setItem('empId', emp?.data.empId);
-      localStorage.setItem('empName', emp?.data.empName);
-      localStorage.setItem('roleName', emp?.data.roleName);
-      localStorage.setItem('designationCode', emp?.data.empDesigName);
-      localStorage.setItem('title', emp?.data.title);
-      localStorage.setItem('salutation', emp?.data.salutation);
-      localStorage.setItem('roleId', emp?.data.roleId);
-      localStorage.setItem('hindiEmpDesigName', emp?.data.hindiEmpDesigName)
-      localStorage.setItem('hindiEmpName', emp?.data.hindiEmpName)
-      localStorage.setItem('hindiRoleName', emp?.data.hindiRoleName)
-      localStorage.setItem('hindiSalutation', emp?.data.hindiSalutation)
-      localStorage.setItem('hindiTitle', emp?.data.hindiTitle)
-      localStorage.setItem('isGroup', emp?.data.isGroup);
-
-      await customAuditStampingLogin(username);
-      return response.data;
-    } else {
-      throw new Error('Invalid response from server');
+      return authData;
     }
+
+    if (!authData?.token) {
+      throw new Error(
+        authData?.message ||
+        "We couldn't sign you in. Please try again."
+      );
+    }
+
+    // Save the authenticated session before checking the login code.
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        token: authData.token,
+        username: normalizedUsername,
+      })
+    );
+
+    localStorage.setItem("username", normalizedUsername);
+    localStorage.setItem("roles", JSON.stringify(authData.roles || []));
+
+    const roles = authData.roles || [];
+    const hindiRoles = authData.hindiRoles || [];
+    const hindiRoleMap = {};
+
+    roles.forEach((role, index) => {
+      hindiRoleMap[role] = hindiRoles[index];
+    });
+
+    localStorage.setItem(
+      "hindiRoleMap",
+      JSON.stringify(hindiRoleMap)
+    );
+
+    // Existing normal-login logic remains unchanged.
+    const emp = await getUserDetails(normalizedUsername);
+
+    if (!emp) {
+      throw new Error(
+        "Your login was successful, but we couldn't load your employee details. Please contact your administrator."
+      );
+    }
+
+    localStorage.setItem("loginId", emp?.data?.loginId ?? "");
+    localStorage.setItem("empId", emp?.data?.empId ?? "");
+    localStorage.setItem("empName", emp?.data?.empName ?? "");
+    localStorage.setItem("roleName", emp?.data?.roleName ?? "");
+    localStorage.setItem("designationCode", emp?.data?.empDesigName ?? "");
+    localStorage.setItem("title", emp?.data?.title ?? "");
+    localStorage.setItem("salutation", emp?.data?.salutation ?? "");
+    localStorage.setItem("roleId", emp?.data?.roleId ?? "");
+    localStorage.setItem("hindiEmpDesigName", emp?.data?.hindiEmpDesigName ?? "");
+    localStorage.setItem("hindiEmpName", emp?.data?.hindiEmpName ?? "");
+    localStorage.setItem("hindiRoleName", emp?.data?.hindiRoleName ?? "");
+    localStorage.setItem("hindiSalutation", emp?.data?.hindiSalutation ?? "");
+    localStorage.setItem("hindiTitle", emp?.data?.hindiTitle ?? "");
+    localStorage.setItem("isGroup", emp?.data?.isGroup ?? "");
+
+    await customAuditStampingLogin(normalizedUsername);
+
+    return authData;
   } catch (error) {
-    console.error('Error occurred in login:', error);
+    console.error("Error occurred in login:", error);
     throw error;
   }
 };
+
 
 export const setLocalStorageData = async (username) => {
   if (!username) {
@@ -170,19 +204,23 @@ export const customAuditStampingLogout = async (username, logoutType) => {
   }
 }
 
+
 export const getLicense = async () => {
-  try {
-    const response = await axios.get(
-      `${API_URL}api/admin/get-license`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    return response.data; // true / false
-  } catch (error) {
-    console.error("License API error:", error);
-    return false;
+  const response = await axios.get(
+    `${API_URL}api/admin/get-license`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      timeout: 15000,
+    }
+  );
+
+  // The API must return an actual Boolean.
+  // HTTP/network errors will be thrown to the caller.
+  if (typeof response.data !== "boolean") {
+    throw new Error("Invalid response from license server");
   }
+
+  return response.data;
 };

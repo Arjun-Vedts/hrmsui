@@ -27,12 +27,12 @@ const Login = () => {
       usernamePlaceholder: "Enter Username",
       password: "Password",
       passwordPlaceholder: "Enter Password",
-       usernameRequired: "Username is required",
+      usernameRequired: "Username is required",
       passwordRequired: "Password is required",
       login: "Login",
       developed: "Designed & Developed by",
       browserText: "Best viewed on",
-       invalidCredentials: "Invalid username or password",
+      invalidCredentials: "Invalid username or password",
     },
     hi: {
       title: "एचआरएमएस",
@@ -43,7 +43,7 @@ const Login = () => {
       password: "पासवर्ड",
       passwordPlaceholder: "पासवर्ड दर्ज करें",
       usernameRequired: "उपयोगकर्ता नाम आवश्यक है",
-    passwordRequired: "पासवर्ड आवश्यक है",
+      passwordRequired: "पासवर्ड आवश्यक है",
       login: "लॉगिन",
       developed: "डिज़ाइन एवं विकसित",
       browserText: "सर्वोत्तम प्रदर्शन हेतु",
@@ -72,52 +72,129 @@ const Login = () => {
 
   const showError = (msg) => {
     setMessage(msg);
-    setTimeout(() => setMessage(""), 3000);
+    setTimeout(() => setMessage(""), 3200);
   };
+
 
   const handleLoginSubmit = async (values) => {
     setMessage("");
     setLoading(true);
-    const username = values.username;
-    const password = values.password;
+
+    const username = values.username?.trim();
 
     try {
-      const isLicenseValid = await getLicense();
+      // Step 1: Validate input
+      if (!username || !values.password) {
+        showError("Please enter both username and password.");
+        return;
+      }
 
-      if (!isLicenseValid) {
+      // Step 2: Check the license separately.
+      // A server/network error must NOT be treated as expiration.
+      let isLicenseValid;
+
+      try {
+        isLicenseValid = await getLicense();
+      } catch (error) {
+        console.error("License verification error:", error);
+
+        const status = error?.response?.status;
+
+        if (!error.response) {
+          showError(
+            "Unable to connect to the server. Please check your network or ensure the server is running."
+          );
+        } else if (status >= 500) {
+          showError(
+            "The server encountered an error while verifying the license. Please try again later."
+          );
+        } else {
+          showError(
+            "Unable to verify the license at this time. Please try again."
+          );
+        }
+
+        return;
+      }
+
+      // Only a successful license response with false means invalid/expired.
+      if (isLicenseValid === false) {
         localStorage.setItem("license-exp", "Y");
-        navigate("/license-exp");
+        navigate("/license-exp", {
+          replace: true,
+          state: { reason: "expired" },
+        });
+        return;
+      }
+      // Defensive check: never continue on an unexpected response.
+      if (isLicenseValid !== true) {
+        showError("Invalid response from the license server. Please try again.");
         return;
       }
 
       localStorage.setItem("license-exp", "N");
 
-      const response = await login(username, password);
+      // Step 3: Authenticate
+      const response = await login(username, values.password);
 
-      if (response?.success) {
-        navigate("/dashboard", { replace: true });
-      } else {
-        showError(response?.message || "Login failed");
+      if (!response) {
+        showError("Login failed. Please try again.");
+        return;
       }
+
+      // Default-password login: redirect to password change.
+      if (response?.statusCode === "DEFAULT_PASSWORD") {
+        navigate("/change-password", {
+          replace: true,
+          state: {
+            username,
+            message: "Please change your default password.",
+          },
+        });
+
+        return;
+      }
+
+      // Normal successful login.
+      navigate("/dashboard", { replace: true });
+
     } catch (error) {
       console.error("Login error:", error);
-      let resMessage = "Something went wrong, please try again!";
 
-      if (error.response) {
-        const status = error.response.status;
-        if (status === 401) resMessage = t.invalidCredentials;
-        else if (status === 403)
-          resMessage = "Your account is locked or disabled";
-        else if (status === 400) resMessage = "Invalid input format";
-        else if (status === 500)
-          resMessage = "Server error during authentication";
+      const status = error?.response?.status;
+      const data = error?.response?.data;
+
+      let errorMessage =
+        data?.message ||
+        error?.message ||
+        "Something went wrong. Please try again.";
+
+      if (!error?.response) {
+        errorMessage =
+          "Unable to connect to the server. Please check your network or ensure the server is running.";
+      } else if (status === 401) {
+        errorMessage =
+          data?.message || "Incorrect username or password.";
+      } else if (status === 403) {
+        errorMessage =
+          data?.message || "Your account is locked or disabled.";
+      } else if (status === 404) {
+        errorMessage =
+          data?.message || "User not found. Please contact the administrator.";
+      } else if (status === 502 || status === 503 || status === 504) {
+        errorMessage =
+          data?.message || "The authentication service is temporarily unavailable.";
+      } else if (status >= 500) {
+        errorMessage =
+          data?.message || "Server error during authentication. Please try again later.";
       }
 
-      showError(resMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
+
 
   // Clock
   useEffect(() => {
@@ -162,13 +239,13 @@ const Login = () => {
 
           <div className="clock-pill">{time}</div>
 
-        
+
 
           <div className="language-container">
             <button
               className="language-toggle-btn"
               onClick={toggleLanguage}
-              // title={language === "en" ? "Change Language" : "भाषा बदलें"}
+            // title={language === "en" ? "Change Language" : "भाषा बदलें"}
             >
               <svg
                 className="language-svg"
@@ -199,7 +276,7 @@ const Login = () => {
       {/* BODY */}
       <div className="login-viewport">
         <div className="premium-card">
-          <h3 className="text-center mb-4 mt-3">{t.welcome}</h3>
+          <h3 className="text-center mb-4 mt-4">{t.welcome}</h3>
 
           {message && (
             <div className="alert alert-danger text-center" role="alert">

@@ -12,11 +12,6 @@ import { getCurrentRegularDate } from "../utils/formatterUtils";
 
 const AnnualTrainingReportViewer = ({ reportData = [] }) => {
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [isColumnDropdownOpen, setIsColumnDropdownOpen] = useState(false);
-
   const totals = reportData.reduce((acc, row) => {
     acc.withinLab += row.withinLab || 0;
     acc.otherLabs += row.otherLabs || 0;
@@ -27,14 +22,22 @@ const AnnualTrainingReportViewer = ({ reportData = [] }) => {
     acc.drdsRacBoard += row.drdsRacBoard || 0;
     acc.drdsOpen += row.drdsOpen || 0;
     acc.drdsTotal += row.drdsTotal || 0;
+    acc.drdsMale += row.drdsMale || 0;
+    acc.drdsFemale += row.drdsFemale || 0;
     acc.drtcTni += row.drtcTni || 0;
     acc.drtcCeptamBoard += row.drtcCeptamBoard || 0;
     acc.drtcOpen += row.drtcOpen || 0;
+    acc.drtcMale += row.drtcMale || 0;
+    acc.drtcFemale += row.drtcFemale || 0;
     acc.drtcTotal += row.drtcTotal || 0;
     acc.adminAlliedTni += row.adminAlliedTni || 0;
     acc.adminAlliedOpen += row.adminAlliedOpen || 0;
+    acc.adminAlliedMale += row.adminAlliedMale || 0;
+    acc.adminAlliedFemale += row.adminAlliedFemale || 0;
     acc.adminAlliedTotal += row.adminAlliedTotal || 0;
     acc.othersTotal += row.othersTotal || 0;
+    acc.othersMale += row.othersMale || 0;
+    acc.othersFemale += row.othersFemale || 0;
     return acc;
   }, {
     withinLab: 0,
@@ -45,15 +48,23 @@ const AnnualTrainingReportViewer = ({ reportData = [] }) => {
     drdsTni: 0,
     drdsRacBoard: 0,
     drdsOpen: 0,
+    drdsMale: 0,
+    drdsFemale: 0,
     drdsTotal: 0,
     drtcTni: 0,
     drtcCeptamBoard: 0,
     drtcOpen: 0,
+    drtcMale: 0,
+    drtcFemale: 0,
     drtcTotal: 0,
     adminAlliedTni: 0,
     adminAlliedOpen: 0,
+    adminAlliedMale: 0,
+    adminAlliedFemale: 0,
     adminAlliedTotal: 0,
-    othersTotal: 0
+    othersTotal: 0,
+    othersMale: 0,
+    othersFemale: 0
   });
 
   const handleExport = (type) => {
@@ -71,21 +82,25 @@ const AnnualTrainingReportViewer = ({ reportData = [] }) => {
       row.drdsRacBoard || 0,
       row.drdsOpen || 0,
       row.drdsTotal || 0,
-      row.drdsMaleFemale || "",
+      row.drdsMale || 0,
+      row.drdsFemale || 0,
 
       row.drtcTni || 0,
       row.drtcCeptamBoard || 0,
       row.drtcOpen || 0,
       row.drtcTotal || 0,
-      row.drtcMaleFemale || "",
+      row.drtcMale || 0,
+      row.drtcFemale || 0,
 
       row.adminAlliedTni || 0,
       row.adminAlliedOpen || 0,
       row.adminAlliedTotal || 0,
-      row.adminAlliedMaleFemale || "",
+      row.adminAlliedMale || 0,
+      row.adminAlliedFemale || 0,
 
       row.othersTotal || 0,
-      row.othersMaleFemale || ""
+      row.othersMale || 0,
+      row.othersFemale || 0
     ]));
 
     // ✅ GRAND TOTAL ROW
@@ -102,21 +117,25 @@ const AnnualTrainingReportViewer = ({ reportData = [] }) => {
       totals.drdsRacBoard,
       totals.drdsOpen,
       totals.drdsTotal,
-      "",
+      totals.drdsMale,
+      totals.drdsFemale,
 
       totals.drtcTni,
       totals.drtcCeptamBoard,
       totals.drtcOpen,
       totals.drtcTotal,
-      "",
+      totals.drtcMale,
+      totals.drtcFemale,
 
       totals.adminAlliedTni,
       totals.adminAlliedOpen,
       totals.adminAlliedTotal,
-      "",
+      totals.adminAlliedMale,
+      totals.adminAlliedFemale,
 
       totals.othersTotal,
-      ""
+      totals.othersMale,
+      totals.othersFemale
     ]);
 
     const headers = [
@@ -137,25 +156,30 @@ const AnnualTrainingReportViewer = ({ reportData = [] }) => {
   };
 
   const exportToExcel = (headers, rows) => {
+    const TOTAL_COLS = 27;
+    const HEADER_ROW_1 = 2;
+    const HEADER_ROW_2 = 3;
+    const DATA_START = 4;
+    const lastRow = DATA_START + rows.length - 1; // grand total row
 
     const headerRow1 = [
-      "SN", "Course name", "Within Lab (No.)", "Other Labs (No.)",
+      "SN", "Course Name", "Within Lab (No.)", "Other Labs (No.)",
       "Outside (Within India)", "Outside (Foreign Agency)", "Sub Total",
-      "No. of Participants (DRDS)", "", "", "", "",
-      "No. of Participants (DRTC)", "", "", "", "",
-      "No. of Participants (Admin & Allied)", "", "", "",
-      "No. of Participants (Others)", ""
+      "No. of Participants (DRDS)", "", "", "", "", "",
+      "No. of Participants (DRTC)", "", "", "", "", "",
+      "No. of Participants (Admin & Allied)", "", "", "", "",
+      "No. of Participants (Others)", "", ""
     ];
 
     const headerRow2 = [
       "", "", "", "", "", "", "",
-      "TNI (No. & %)", "RAC Board Recomm.", "Open (No. & %)", "Total", "Male/Female",
-      "TNI (No. & %)", "CEPTAM Board Recomm.", "Open (No. & %)", "Total", "Male/Female",
-      "TNI (No. & %)", "Open (No. & %)", "Total", "Male/Female",
-      "Total", "Male/Female"
+      "TNI (No. & %)", "RAC Board Recomm.", "Open (No. & %)", "Total", "Male", "Female",
+      "TNI (No. & %)", "CEPTAM Board Recomm.", "Open (No. & %)", "Total", "Male", "Female",
+      "TNI (No. & %)", "Open (No. & %)", "Total", "Male", "Female",
+      "Total", "Male", "Female"
     ];
 
-    const worksheet = XLSX.utils.aoa_to_sheet([
+    const ws = XLSX.utils.aoa_to_sheet([
       ["Annual Training Report"],
       [],
       headerRow1,
@@ -163,105 +187,162 @@ const AnnualTrainingReportViewer = ({ reportData = [] }) => {
       ...rows
     ]);
 
-    worksheet["!merges"] = [
+    // Put the GRAND TOTAL label in the top-left cell of the merged range (column A)
+    ws[XLSX.utils.encode_cell({ r: lastRow, c: 0 })] = { t: "s", v: "GRAND TOTAL" };
+    ws[XLSX.utils.encode_cell({ r: lastRow, c: 1 })] = { t: "s", v: "" };
 
-      // Title Merge
-      { s: { r: 0, c: 0 }, e: { r: 0, c: 22 } },
-
-      // Vertical merges
-      { s: { r: 2, c: 0 }, e: { r: 3, c: 0 } },
-      { s: { r: 2, c: 1 }, e: { r: 3, c: 1 } },
-      { s: { r: 2, c: 2 }, e: { r: 3, c: 2 } },
-      { s: { r: 2, c: 3 }, e: { r: 3, c: 3 } },
-      { s: { r: 2, c: 4 }, e: { r: 3, c: 4 } },
-      { s: { r: 2, c: 5 }, e: { r: 3, c: 5 } },
-      { s: { r: 2, c: 6 }, e: { r: 3, c: 6 } },
-
-      // DRDS
-      { s: { r: 2, c: 7 }, e: { r: 2, c: 11 } },
-
-      // DRTC
-      { s: { r: 2, c: 12 }, e: { r: 2, c: 16 } },
-
-      // Admin
-      { s: { r: 2, c: 17 }, e: { r: 2, c: 20 } },
-
-      // Others
-      { s: { r: 2, c: 21 }, e: { r: 2, c: 22 } }
+    // ── Merges ────────────────────────────────────────────────
+    const merges = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: TOTAL_COLS - 1 } },      // title
+      { s: { r: 2, c: 7 }, e: { r: 2, c: 12 } },                  // DRDS
+      { s: { r: 2, c: 13 }, e: { r: 2, c: 18 } },                 // DRTC
+      { s: { r: 2, c: 19 }, e: { r: 2, c: 23 } },                 // Admin
+      { s: { r: 2, c: 24 }, e: { r: 2, c: 26 } },                 // Others
+      { s: { r: lastRow, c: 0 }, e: { r: lastRow, c: 1 } },       // GRAND TOTAL label
     ];
+    for (let c = 0; c <= 6; c++) {
+      merges.push({ s: { r: 2, c }, e: { r: 3, c } });            // vertical header merges
+    }
+    ws["!merges"] = merges;
 
-    // Style the Title (Cell A1)
-    worksheet["A1"].s = {
-      font: { name: "Arial", sz: 16, bold: true, color: { rgb: "0163d6" } },
-      alignment: { horizontal: "center", vertical: "center" },
-      fill: { fgColor: { rgb: "F2F2F2" } }
+    // ── Style helpers ─────────────────────────────────────────
+    const border = (rgb) => ({
+      top: { style: "thin", color: { rgb } },
+      bottom: { style: "thin", color: { rgb } },
+      left: { style: "thin", color: { rgb } },
+      right: { style: "thin", color: { rgb } },
+    });
+
+    // Header colour per column group
+    const groupColor = (c) => {
+      if (c <= 6) return "0163D6";   // fixed columns
+      if (c <= 12) return "1D4ED8";  // DRDS
+      if (c <= 18) return "0F766E";  // DRTC
+      if (c <= 23) return "7C3AED";  // Admin & Allied
+      return "B45309";               // Others
     };
 
-    // Get range to loop through cells
-    const range = XLSX.utils.decode_range(worksheet['!ref']);
+    // Make sure every cell in the grid exists so styles/borders apply to merged areas too
+    const ensureCell = (r, c) => {
+      const addr = XLSX.utils.encode_cell({ r, c });
+      if (!ws[addr]) ws[addr] = { t: "s", v: "" };
+      return ws[addr];
+    };
 
-    // Loop through every cell in the range
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-        const address = XLSX.utils.encode_cell({ r: R, c: C });
-        if (!worksheet[address]) continue;
+    for (let r = 0; r <= lastRow; r++) {
+      if (r === 1) continue; // spacer row
+      for (let c = 0; c < TOTAL_COLS; c++) {
+        const cell = ensureCell(r, c);
 
-        // Style Table Headers (Row index 2 and 3)
-        if (R === 2 || R === 3) {
-          worksheet[address].s = {
-            fill: { fgColor: { rgb: "0163d6" } },
-            font: { color: { rgb: "FFFFFF" }, bold: true, sz: 12 },
+        // Title
+        if (r === 0) {
+          cell.s = {
+            font: { name: "Arial", sz: 16, bold: true, color: { rgb: "0163D6" } },
             alignment: { horizontal: "center", vertical: "center" },
-            border: { bottom: { style: "thin", color: { rgb: "000000" } } }
+            fill: { fgColor: { rgb: "F2F2F2" } },
+            border: border("BFC7D1"),
           };
+          continue;
         }
 
-        // Style Data Cells (Row index 4 and onwards)
-        else if (R >= 4) {
-          worksheet[address].s = {
-            font: { sz: 10, color: { rgb: "334155" } },
-            alignment: { horizontal: "center", vertical: "center" },
-            border: {
-              bottom: { style: "thin", color: { rgb: "EDF2F7" } }
-            }
+        // Headers
+        if (r === HEADER_ROW_1 || r === HEADER_ROW_2) {
+          cell.s = {
+            font: { name: "Arial", sz: 11, bold: true, color: { rgb: "FFFFFF" } },
+            fill: { fgColor: { rgb: groupColor(c) } },
+            alignment: { horizontal: "center", vertical: "center", wrapText: true },
+            border: border("FFFFFF"),
           };
-
-          // Optional: Add zebra striping for premium look
-          if (R % 2 === 0) {
-            worksheet[address].s.fill = { fgColor: { rgb: "F8FAFC" } };
-          }
+          continue;
         }
+
+        // Grand total row
+        if (r === lastRow) {
+          cell.s = {
+            font: {
+              name: "Arial",
+              sz: c <= 1 ? 12 : 10,
+              bold: true,
+              color: { rgb: "000000" }
+            },
+            fill: { fgColor: { rgb: "FFF2CC" } },
+            alignment: { horizontal: "center", vertical: "center" },
+            border: border("BFC7D1"),
+          };
+          continue;
+        }
+
+        // Data rows
+        cell.s = {
+          font: { name: "Arial", sz: 10, color: { rgb: "334155" } },
+          alignment: {
+            horizontal: c === 1 ? "left" : "center",
+            vertical: "center",
+            wrapText: c === 1,
+            indent: c === 1 ? 1 : 0,
+          },
+          border: border("D9DEE5"),
+          ...(r % 2 === 1 ? { fill: { fgColor: { rgb: "F8FAFC" } } } : {}),
+        };
+        if (typeof cell.v === "number") cell.z = "0";
       }
     }
 
-    // Auto-calculate column widths
-    worksheet['!cols'] = Array(23).fill({ wch: 15 });
+    // ── Column widths (content-aware for Course Name) ─────────
+    const longestCourse = rows.reduce(
+      (max, r) => Math.max(max, String(r[1] ?? "").length), 12
+    );
+    const courseWidth = Math.min(Math.max(longestCourse + 4, 30), 55);
+
+    ws["!cols"] = [
+      { wch: 6 },            // SN
+      { wch: courseWidth },  // Course Name
+      { wch: 12 },           // Within Lab
+      { wch: 12 },           // Other Labs
+      { wch: 14 },           // Outside India
+      { wch: 16 },           // Outside Foreign
+      { wch: 11 },           // Sub Total
+      ...Array(6).fill({ wch: 13 }),  // DRDS
+      ...Array(6).fill({ wch: 13 }),  // DRTC
+      ...Array(5).fill({ wch: 13 }),  // Admin & Allied
+      ...Array(3).fill({ wch: 11 }),  // Others
+    ];
+
+    // ── Row heights ───────────────────────────────────────────
+    ws["!rows"] = [
+      { hpt: 30 },   // title
+      { hpt: 8 },    // spacer
+      { hpt: 30 },   // header 1
+      { hpt: 45 },   // header 2 (wrapped text)
+      ...rows.map((_, i) => ({ hpt: i === rows.length - 1 ? 24 : 22 })),
+    ];
 
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const finalData = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
-    saveAs(finalData, `${"Annual_Training_Report"}.xlsx`);
+    XLSX.utils.book_append_sheet(workbook, ws, "Annual Training Report");
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    saveAs(
+      new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+      }),
+      "Annual_Training_Report.xlsx"
+    );
   };
 
 
   const exportToPDF = (headers, rows) => {
 
-    const colCount = 23;
+    const COL_COUNT = 27; // was 28, the table has 27 columns (0-26)
 
-    const getPageConfig = (n) => {
-      return { orientation: "landscape", format: "a3" };
-    };
+    const doc = new jsPDF({ orientation: "landscape", format: "a3", unit: "pt" });
 
-    const { orientation, format } = getPageConfig(colCount);
-    const doc = new jsPDF({ orientation, format, unit: "pt" });
-
-    if (pdfFonts) {
-      doc.addFileToVFS('arial.ttf', pdfFonts['arial.ttf']);
-      doc.addFileToVFS('arialbd.ttf', pdfFonts['arialbd.ttf']);
-
-      doc.addFont('arial.ttf', 'Arial', 'normal');
-      doc.addFont('arialbd.ttf', 'Arial', 'bold');
+    // ── Fonts (safe fallback if custom fonts are missing) ──────────────────────
+    let fontName = "helvetica";
+    if (pdfFonts && pdfFonts["arial.ttf"] && pdfFonts["arialbd.ttf"]) {
+      doc.addFileToVFS("arial.ttf", pdfFonts["arial.ttf"]);
+      doc.addFileToVFS("arialbd.ttf", pdfFonts["arialbd.ttf"]);
+      doc.addFont("arial.ttf", "Arial", "normal");
+      doc.addFont("arialbd.ttf", "Arial", "bold");
+      fontName = "Arial";
     }
 
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -269,145 +350,160 @@ const AnnualTrainingReportViewer = ({ reportData = [] }) => {
     const margin = 40;
     const usableWidth = pageWidth - margin * 2;
 
-    // ── Font size scales down for dense tables ─────────────────────────────────
-    const fontSize = colCount > 18 ? 6 : colCount > 12 ? 7 : colCount > 8 ? 8 : 9;
-    const headFontSize = colCount > 18 ? 6 : colCount > 12 ? 7 : colCount > 8 ? 8 : 10;
-    const cellPadding = colCount > 12 ? 4 : 6;
+    // ── Same group colours as the Excel export ─────────────────────────────────
+    const groupColor = (c) => {
+      if (c <= 6) return "#0163D6";   // fixed columns
+      if (c <= 12) return "#1D4ED8";  // DRDS
+      if (c <= 18) return "#0F766E";  // DRTC
+      if (c <= 23) return "#7C3AED";  // Admin & Allied
+      return "#B45309";               // Others
+    };
 
-    // ── Title ──────────────────────────────────────────────────────────────────
-    const titleText = "Annual Training Report";
+    // ── Title + subtitle ───────────────────────────────────────────────────────
+    doc.setFont(fontName, "bold");
     doc.setFontSize(18);
     doc.setTextColor("#0163d6");
-    doc.setFont("Arial", "bold");
+    doc.text("Annual Training Report", margin, margin + 16);
 
-    const titleLines = doc.splitTextToSize(titleText, usableWidth);
-    doc.text(titleLines, margin, margin + 16);
+    doc.setFont(fontName, "normal");
+    doc.setFontSize(9);
+    doc.setTextColor("#64748b");
 
-    const titleLineHeight = 22;
-    const titleBottom = margin + 16 + titleLines.length * titleLineHeight;
-    const tableStartY = titleBottom + 2;
+    const tableStartY = margin + 44;
 
-    // ── Table data ─────────────────────────────────────────────────────────────
+    // ── Header ─────────────────────────────────────────────────────────────────
     const head = [
       [
         { content: "SN", rowSpan: 2 },
-        { content: "Course name", rowSpan: 2 },
+        { content: "Course Name", rowSpan: 2 },
         { content: "Within Lab (No.)", rowSpan: 2 },
         { content: "Other Labs (No.)", rowSpan: 2 },
         { content: "Outside (Within India)", rowSpan: 2 },
         { content: "Outside (Foreign Agency)", rowSpan: 2 },
         { content: "Sub Total", rowSpan: 2 },
-
-        { content: "No. of Participants (DRDS)", colSpan: 5 },
-        { content: "No. of Participants (DRTC)", colSpan: 5 },
-        { content: "No. of Participants (Admin & Allied)", colSpan: 4 },
-        { content: "No. of Participants (Others)", colSpan: 2 }
+        { content: "No. of Participants (DRDS)", colSpan: 6 },
+        { content: "No. of Participants (DRTC)", colSpan: 6 },
+        { content: "No. of Participants (Admin & Allied)", colSpan: 5 },
+        { content: "No. of Participants (Others)", colSpan: 3 },
       ],
       [
-        "TNI (No. & %)", "RAC Board Recomm.", "Open (No. & %)", "Total", "Male/Female",
-        "TNI (No. & %)", "CEPTAM Board Recomm.", "Open (No. & %)", "Total", "Male/Female",
-        "TNI (No. & %)", "Open (No. & %)", "Total", "Male/Female",
-        "Total", "Male/Female"
-      ]
+        "TNI (No. & %)", "RAC Board Recomm.", "Open (No. & %)", "Total", "Male", "Female",
+        "TNI (No. & %)", "CEPTAM Board Recomm.", "Open (No. & %)", "Total", "Male", "Female",
+        "TNI (No. & %)", "Open (No. & %)", "Total", "Male", "Female",
+        "Total", "Male", "Female",
+      ],
     ];
-    const body = rows;
 
-    // ── Column styles: alignment ONLY, no cellWidth ────────────────────────────
-    // Let autoTable measure content naturally, then we scale to fit the page
+    // ── Body: merge "GRAND TOTAL" across SN + Course Name ──────────────────────
+    const lastIndex = rows.length - 1;
+    const body = rows.map((row, i) =>
+      i === lastIndex
+        ? [{ content: "GRAND TOTAL", colSpan: 2, styles: { halign: "center" } }, ...row.slice(2)]
+        : row
+    );
+
+    // ── Column widths: relative weights scaled to fill the page exactly ───────
+    const weights = [
+      28, 150, 42, 42, 50, 56, 40,        // fixed columns
+      42, 52, 42, 38, 38, 38,             // DRDS
+      42, 56, 42, 38, 38, 38,             // DRTC
+      42, 42, 38, 38, 38,                 // Admin & Allied
+      38, 38, 38,                         // Others
+    ];
+    const scale = usableWidth / weights.reduce((a, b) => a + b, 0);
+
     const columnStyles = {};
-    for (let i = 0; i < colCount; i++) {
-      columnStyles[i] = { halign: i === 1 ? 'left' : 'center' };
+    for (let i = 0; i < COL_COUNT; i++) {
+      columnStyles[i] = {
+        cellWidth: weights[i] * scale,
+        halign: i === 1 ? "left" : "center",
+      };
     }
-
-    // ── First pass: measure natural content widths ─────────────────────────────
-    // We use autoTable's columnWidth calculation via a dry run approach:
-    // Provide minCellWidth so no column collapses, tableWidth "wrap" to get natural sizes
-    const MIN_COL_WIDTH = 30; // pt — absolute minimum per column
-
-    // After autoTable runs, it exposes the final column widths via the table object.
-    // We hook into didParseCell to do nothing, then scale in willDrawCell if needed.
-    // Simpler: use tableWidth as usableWidth + autoTable's "auto" content fitting.
 
     autoTable(doc, {
       head,
       body,
       startY: tableStartY,
-      margin: { left: margin, right: margin, bottom: margin + 20 },
-      tableWidth: usableWidth,   // hard-constrain to page
+      margin: { top: margin, left: margin, right: margin, bottom: margin + 30 },
+      tableWidth: usableWidth,
       columnStyles,
+      theme: "grid",
+      showHead: "everyPage",
+      rowPageBreak: "avoid",
 
-      // KEY: let autoTable distribute widths by content, then scale to fit
-      // "auto" means: size each column to its content, then scale all proportionally to fit tableWidth
-      // This is what actually fixes the squished columns issue
       styles: {
-        fontSize,
-        cellPadding,
+        font: fontName,
+        fontSize: 7,
+        cellPadding: 3,
         textColor: "#334155",
-        lineColor: "#e2e8f0",
+        lineColor: "#d9dee5",
         lineWidth: 0.5,
         overflow: "linebreak",
-        minCellWidth: MIN_COL_WIDTH,
+        valign: "middle",
+        halign: "center",
       },
 
       headStyles: {
-        fillColor: "#0163d6",
         textColor: "#ffffff",
         fontStyle: "bold",
-        fontSize: headFontSize,
+        fontSize: 7,
         halign: "center",
-        minCellWidth: MIN_COL_WIDTH,
+        valign: "middle",
+        lineColor: "#ffffff",
+        cellPadding: 4,
       },
 
-      alternateRowStyles: {
-        fillColor: "#f8fafc",
-      },
+      alternateRowStyles: { fillColor: "#f8fafc" },
 
-      // autoTable by default distributes columns proportionally when tableWidth is set.
-      // To make it content-aware, we override column widths after the first internal layout pass.
-      didParseCell: (hookData) => {
-        // Remove any forced cellWidth so autoTable uses content-based sizing
-        delete hookData.column.width;
-        if (hookData.row.index === rows.length - 1) {
-          hookData.cell.styles.fillColor = "#FFF2CC";
-          hookData.cell.styles.fontStyle = "bold";
+      didParseCell: (data) => {
+        // Header: colour by column group
+        if (data.section === "head") {
+          data.cell.styles.fillColor = groupColor(data.column.index);
         }
-        if (hookData.column.index === 1) {
-          hookData.cell.styles.halign = "left";
+
+        // Grand total row (body only, so header rows are never affected)
+        if (data.section === "body" && data.row.index === lastIndex) {
+          data.cell.styles.fillColor = "#FFF2CC";
+          data.cell.styles.fontStyle = "bold";
+          data.cell.styles.textColor = "#000000";
+          data.cell.styles.fontSize = data.column.index <= 1 ? 8 : 7;
         }
-      },
 
-      didDrawPage: ({ pageNumber }) => {
-        const pageCount = doc.internal.getNumberOfPages();
-        const footerY = pageHeight - margin + 10;
-        const timestamp = `Generated on: ${getCurrentRegularDate()} ${new Date().toLocaleTimeString()}`;
-
-        doc.setDrawColor("#e2e8f0");
-        doc.setLineWidth(0.5);
-        doc.line(margin, footerY - 8, pageWidth - margin, footerY - 8);
-
-        doc.setFontSize(8);
-        doc.setTextColor("#808791");
-        doc.setFont("Arial", "normal");
-        doc.text(timestamp, margin, footerY + 4);
-        doc.text(
-          `Page ${pageNumber} of ${pageCount}`,
-          pageWidth - margin,
-          footerY + 4,
-          { align: "right" }
-        );
+        // Course name stays left aligned (but not the header or the total label)
+        if (data.section === "body" && data.column.index === 1 && data.row.index !== lastIndex) {
+          data.cell.styles.halign = "left";
+        }
       },
     });
+
+    // ── Footer on every page (drawn after, so "of N" is correct) ───────────────
+    const pageCount = doc.internal.getNumberOfPages();
+    const generatedOn = `Generated on: ${getCurrentRegularDate()} ${new Date().toLocaleTimeString()}`;
+    const footerY = pageHeight - margin + 10;
+
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setDrawColor("#e2e8f0");
+      doc.setLineWidth(0.5);
+      doc.line(margin, footerY - 8, pageWidth - margin, footerY - 8);
+
+      doc.setFont(fontName, "normal");
+      doc.setFontSize(8);
+      doc.setTextColor("#808791");
+      doc.text(generatedOn, margin, footerY + 4);
+      doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, footerY + 4, { align: "right" });
+    }
 
     doc.setProperties({
       title: "Annual Training Report",
       author: "HRMS",
     });
 
-    // doc.save(`${fileName}.pdf`);
-    const blob = doc.output("blob");
-    const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(doc.output("blob"));
     window.open(url, "_blank");
+    setTimeout(() => URL.revokeObjectURL(url), 60000); // free memory after a minute
   };
+
 
   return (
     <div className="mt-4">
@@ -444,10 +540,10 @@ const AnnualTrainingReportViewer = ({ reportData = [] }) => {
                 <th rowSpan="4">Outside (Foreign Agency)</th>
                 <th rowSpan="4">Sub Total</th>
 
-                <th colSpan="5">No. of Participants (DRDS)</th>
-                <th colSpan="5">No. of Participants (DRTC)</th>
-                <th colSpan="4">No. of Participants (Admin & Allied)</th>
-                <th colSpan="2">No. of Participants (Others)</th>
+                <th colSpan="6">No. of Participants (DRDS)</th>
+                <th colSpan="6">No. of Participants (DRTC)</th>
+                <th colSpan="5">No. of Participants (Admin & Allied)</th>
+                <th colSpan="3">No. of Participants (Others)</th>
               </tr>
 
               {/* ================= SECOND HEADER ROW ================= */}
@@ -457,21 +553,25 @@ const AnnualTrainingReportViewer = ({ reportData = [] }) => {
                 <th rowSpan="3">RAC Board Recomm. (no & %) </th>
                 <th rowSpan="3">Open (No. & %)</th>
                 <th rowSpan="3">Total</th>
-                <th rowSpan="3">Male/Female</th>
+                <th rowSpan="3">Male</th>
+                <th rowSpan="3">Female</th>
 
                 <th rowSpan="3">TNI (No. & %)</th>
                 <th rowSpan="3">CEPTAM Board Recomm. (no & %) </th>
                 <th rowSpan="3">Open (No. & %)</th>
                 <th rowSpan="3">Total</th>
-                <th rowSpan="3">Male/Female</th>
+                <th rowSpan="3">Male</th>
+                <th rowSpan="3">Female</th>
 
                 <th rowSpan="3">TNI (No. & %)</th>
                 <th rowSpan="3">Open (No. & %)</th>
                 <th rowSpan="3">Total</th>
-                <th rowSpan="3">Male/Female</th>
+                <th rowSpan="3">Male</th>
+                <th rowSpan="3">Female</th>
 
                 <th rowSpan="3">Total</th>
-                <th rowSpan="3">Male/Female</th>
+                <th rowSpan="3">Male</th>
+                <th rowSpan="3">Female</th>
               </tr>
 
               <tr></tr>
@@ -496,21 +596,25 @@ const AnnualTrainingReportViewer = ({ reportData = [] }) => {
                       <td className="text-center">{row.drdsRacBoard || 0}</td>
                       <td className="text-center">{row.drdsOpen || 0}</td>
                       <td className="text-center">{row.drdsTotal || 0}</td>
-                      <td className="text-center">{row.drdsMaleFemale || ''}</td>
+                      <td className="text-center">{row.drdsMale || 0}</td>
+                      <td className="text-center">{row.drdsFemale || 0}</td>
 
                       <td className="text-center">{row.drtcTni || 0}</td>
                       <td className="text-center">{row.drtcCeptamBoard || 0}</td>
                       <td className="text-center">{row.drtcOpen || 0}</td>
                       <td className="text-center">{row.drtcTotal || 0}</td>
-                      <td className="text-center">{row.drtcMaleFemale || ''}</td>
+                      <td className="text-center">{row.drtcMale || 0}</td>
+                      <td className="text-center">{row.drtcFemale || 0}</td>
 
                       <td className="text-center">{row.adminAlliedTni || 0}</td>
                       <td className="text-center">{row.adminAlliedOpen || 0}</td>
                       <td className="text-center">{row.adminAlliedTotal || 0}</td>
-                      <td className="text-center">{row.adminAlliedMaleFemale || ''}</td>
+                      <td className="text-center">{row.adminAlliedMale || 0}</td>
+                      <td className="text-center">{row.adminAlliedFemale || 0}</td>
 
                       <td className="text-center">{row.othersTotal || 0}</td>
-                      <td className="text-center">{row.othersMaleFemale || ''}</td>
+                      <td className="text-center">{row.othersMale || 0}</td>
+                      <td className="text-center">{row.othersFemale || 0}</td>
                     </tr>
                   ))}
 
@@ -527,26 +631,30 @@ const AnnualTrainingReportViewer = ({ reportData = [] }) => {
                     <td className="text-center">{totals.drdsRacBoard}</td>
                     <td className="text-center">{totals.drdsOpen}</td>
                     <td className="text-center">{totals.drdsTotal}</td>
-                    <td></td>
+                    <td className="text-center">{totals.drdsMale}</td>
+                    <td className="text-center">{totals.drdsFemale}</td>
 
                     <td className="text-center">{totals.drtcTni}</td>
                     <td className="text-center">{totals.drtcCeptamBoard}</td>
                     <td className="text-center">{totals.drtcOpen}</td>
                     <td className="text-center">{totals.drtcTotal}</td>
-                    <td></td>
+                    <td className="text-center">{totals.drtcMale}</td>
+                    <td className="text-center">{totals.drtcFemale}</td>
 
                     <td className="text-center">{totals.adminAlliedTni}</td>
                     <td className="text-center">{totals.adminAlliedOpen}</td>
                     <td className="text-center">{totals.adminAlliedTotal}</td>
-                    <td></td>
+                    <td className="text-center">{totals.adminAlliedMale}</td>
+                    <td className="text-center">{totals.adminAlliedFemale}</td>
 
                     <td className="text-center">{totals.othersTotal}</td>
-                    <td></td>
+                    <td className="text-center">{totals.othersMale}</td>
+                    <td className="text-center">{totals.othersFemale}</td>
                   </tr>
                 </>
               ) : (
                 <tr>
-                  <td colSpan="24" className="text-center">No data available</td>
+                  <td colSpan="28" className="text-center">No data available</td>
                 </tr>
               )}
 

@@ -742,6 +742,10 @@ const Requisition = () => {
                 }
             </div>
 
+            <div className="mt-3 small text-secondary text-start px-3">
+               Note:     A hard copy of the requisition, once approved by AD_HRT, shall be forwarded to the HRT Office for further processing.
+            </div>
+
             {showModal &&
                 <RequisitionPreview
                     reqData={reqData}

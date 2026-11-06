@@ -221,7 +221,7 @@ const Journal = () => {
     return (
         <div>
             <h3 className="fancy-heading mt-3">
-                Journal List
+                List of Publications
                 <span className="underline-glow">
                     <span className="pulse-dot"></span>
                     <span className="pulse-dot"></span>
