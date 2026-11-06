@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import Datatable from "../../datatable/Datatable";
-import { getAgencies, getCourseList, getCourseListByDateRange } from "../../service/training.service";
+import { courseBrochureFileDownload, getAgencies, getCourseList, getCourseListByDateRange } from "../../service/training.service";
 import Swal from "sweetalert2";
 import { Tooltip } from "react-tooltip";
 import Select from "react-select";
-import { FaEdit } from "react-icons/fa";
+import { FaDownload, FaEdit } from "react-icons/fa";
 import { usePermission } from "../../common/usePermission";
 import { useLocation, useNavigate } from "react-router-dom";
 import CourseModal from "./courseModal";
@@ -114,6 +114,17 @@ const CourseList = () => {
                     >
                         <FaEdit className="fs-6" />
                     </button>
+                    {item.brochureName && (
+                        <button
+                            className="btn btn-sm btn-success me-2"
+                            onClick={() => handleDownload(item)}
+                            data-tooltip-id="Tooltip"
+                            data-tooltip-content="Brochure Download"
+                            data-tooltip-place="top"
+                        >
+                            <FaDownload className="fs-6" />
+                        </button>
+                    )}
                 </>
             )
         }));
@@ -141,6 +152,44 @@ const CourseList = () => {
             label: data?.organizer
         }))
     ];
+
+
+    const handleDownload = async (item) => {
+        try {
+            let response = await courseBrochureFileDownload(item.courseId);
+
+            const { data, fileName, contentType } = response;
+
+            if (data === '0') {
+                Swal.fire("Error", "File not found", "error");
+                return;
+            }
+
+            const blob = new Blob([data], { type: contentType });
+
+            if (contentType === "application/pdf") {
+                const url = window.URL.createObjectURL(blob);
+                window.open(url, "_blank");
+            } else {
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.setAttribute("download", fileName);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            }
+        } catch (error) {
+            console.error("Brochure download failed:", error);
+
+            Swal.fire(
+                "Download Failed",
+                "Unable to download the course brochure. Please try again.",
+                "error"
+            );
+        }
+    };
 
 
     return (

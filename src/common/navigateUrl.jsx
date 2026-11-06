@@ -66,7 +66,7 @@ function AppRoutes() {
 
       // 1. Explicitly check for the LOGIN_SUCCESS type
       if (event.data?.type === "LOGIN_SUCCESS" && event.data?.user) {
-        
+
         // 2. IMMEDIATELY send acknowledgment back to the parent
         if (event.source) {
           event.source.postMessage({ type: "LOGIN_ACK" }, event.origin);
@@ -90,13 +90,13 @@ function AppRoutes() {
         const currentUrl = new URL(window.location.href);
         // Assuming 'ems' is the code. You might want to make this dynamic 
         // based on the app.code passed from the parent if multiple apps use this.
-        currentUrl.searchParams.delete("hrms"); 
+        currentUrl.searchParams.delete("hrms");
         window.history.replaceState({}, document.title, currentUrl.pathname + currentUrl.search);
       }
     };
 
     window.addEventListener("message", handleMessage);
-    
+
     // Failsafe timer: If handshake fails or takes too long, stop loading spinner
     const timer = setTimeout(() => {
       setIsCheckingSession(false);
@@ -147,6 +147,9 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
+        <Route path='/license-exp' element={<LicenseExp />} />
+        <Route path="/change-password" element={<ChangePassword />} />
+
         <Route element={<ProtectedRoute> <Layout /> </ProtectedRoute>} >
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/employee" element={<Employee />} />
@@ -157,7 +160,7 @@ function AppRoutes() {
           <Route path="/users" element={<UserManagerList />} />
           <Route path="/roleaccess" element={<FormRoleAccess />} />
           <Route path="/calendar" element={<Calendar />} />
-          <Route path="/cash-limit" element={<CashLimit />}/>
+          <Route path="/cash-limit" element={<CashLimit />} />
           <Route path="/requisition" element={<Requisition />} />
           <Route path="/feedback-add" element={<Feedback />} />
           <Route path="/feedback" element={<FeedbackList />} />
@@ -180,7 +183,6 @@ function AppRoutes() {
           <Route path="/journal" element={<Journal />} />
           <Route path="/mandatory-training" element={<MandatoryTraining />} />
           <Route path="/mandatory-training-add" element={<MandatoryTrainingAddEdit />} />
-          <Route path='/license-exp' element={<LicenseExp />} />
           <Route path="/password-change" element={<ChangePassword />} />
           <Route path="/handing-over" element={<HandingOverList />} />
           <Route path="/req-sa-approval" element={<SAHRTApprovalList />} />

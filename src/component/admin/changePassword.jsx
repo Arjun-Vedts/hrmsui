@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import * as Yup from "yup";
 import AlertConfirmation from "../../common/AlertConfirmation.component";
 import Swal from "sweetalert2";
@@ -7,10 +7,32 @@ import { ErrorMessage, Field, Form, Formik } from "formik";
 import styles from "./ChangePassword.module.css";
 import { FaEye, FaEyeSlash, FaLock } from "react-icons/fa";
 import { updatePassWord } from "../../service/admin.service";
+import { logout } from "../../service/auth.service";
 
 
 const ChangePassword = () => {
+
+    const location = useLocation();
     const navigate = useNavigate();
+
+    const stateMessage = location.state?.message;
+    const stateUsername = location.state?.username;
+
+    // Use state values when available; otherwise use defaults.
+    const displayMessage =
+        typeof stateMessage === "string" && stateMessage.trim()
+            ? stateMessage
+            : "Keep your account secure by choosing a strong password.";
+
+    const displayUsername =
+        typeof stateUsername === "string" && stateUsername.trim()
+            ? stateUsername
+            : localStorage.getItem("username") || "";
+            
+    const showBackToLogin = Boolean(
+        typeof stateMessage === "string" && stateMessage.trim() &&
+        typeof stateUsername === "string" && stateUsername.trim()
+    );
 
     const [showOld, setShowOld] = useState(false);
     const [showNew, setShowNew] = useState(false);
@@ -26,6 +48,12 @@ const ChangePassword = () => {
         oldPassword: "",
         newPassword: "",
         confirmPassword: "",
+    };
+
+    const handleBackToLogin = async () => {
+        await logout("L");
+        localStorage.clear();
+        navigate("/login", { replace: true });
     };
 
     const calculateStrength = (password) => {
@@ -103,7 +131,8 @@ const ChangePassword = () => {
                     timer: 2500,
                 });
 
-                navigate("/dashboard");
+                await logout("L");
+                navigate("/login");
 
             } else if (result === 401) {
                 Swal.fire({
@@ -166,10 +195,30 @@ const ChangePassword = () => {
 
                     <div className={styles.headerSection}>
                         <FaLock className={styles.headerIcon} />
-                        <span className={styles.headerTitle}>Change Password</span>
+
+                        <span className={styles.headerTitle}>
+                            Change Password
+                        </span>
+
+                        {displayUsername && (
+                            <p className={styles.headerSubtitle}>
+                                Username: <strong>{displayUsername}</strong>
+                            </p>
+                        )}
+
                         <p className={styles.headerSubtitle}>
-                            Keep your account secure by choosing a strong password.
+                            {displayMessage}
                         </p>
+
+                        {showBackToLogin && (
+                            <button
+                                type="button"
+                                className="btn btn-link"
+                                onClick={handleBackToLogin}
+                            >
+                                Back to Login
+                            </button>
+                        )}
                     </div>
 
                     <Formik

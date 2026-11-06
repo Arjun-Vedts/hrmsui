@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { addEligible, addOrganizer, addProgram, editProgram, getAgencies, getCourseTypeList, getEligibilities } from "../../service/training.service";
+import { addEligible, addOrganizer, addProgram, courseBrochureFileDownload, editProgram, getAgencies, getCourseTypeList, getEligibilities } from "../../service/training.service";
 import Swal from "sweetalert2";
 import { format } from "date-fns";
 import { ErrorMessage, Field, Form, Formik } from "formik";
@@ -48,7 +48,8 @@ const CourseModal = ({ showProgramModal, setShowProgramModal, editData, setEditD
         onlineRegistrationFee: null,
         noOfNomination: 0,
         venue: "",
-        isFree: "Y"
+        isFree: "Y",
+        multipartFileBrochure: null
     };
 
     const [initialValues, setInitialValues] = useState(programFeilds);
@@ -118,7 +119,15 @@ const CourseModal = ({ showProgramModal, setShowProgramModal, editData, setEditD
             .required("No of Nomination is required")
             .min(0, "Nomination cannot be negative"),
         venue: Yup.string().trim().required("Venue is required")
-            .max(250, "Venue cannot exceed 250 characters")
+            .max(250, "Venue cannot exceed 250 characters"),
+
+        //brochure is optional, but if provided, it should be a valid file type
+        multipartFileBrochure: Yup.mixed()
+            .test("fileType", "Only PDF, JPG, JPEG, PNG files are allowed", (value) => {
+                if (!value) return true;
+                const allowedTypes = ["application/pdf", "image/jpeg", "image/jpg", "image/png"];
+                return allowedTypes.includes(value.type);
+            })
     });
 
 
@@ -178,6 +187,44 @@ const CourseModal = ({ showProgramModal, setShowProgramModal, editData, setEditD
             Swal.fire("Warning", handleApiError(error), "warning");
         } finally {
             setSubmitting(false);
+        }
+    };
+
+
+    const handleDownloadBrochure = async (item) => {
+        try {
+            let response = await courseBrochureFileDownload(item.courseId);
+
+            const { data, fileName, contentType } = response;
+
+            if (data === '0') {
+                Swal.fire("Error", "File not found", "error");
+                return;
+            }
+
+            const blob = new Blob([data], { type: contentType });
+
+            if (contentType === "application/pdf") {
+                const url = window.URL.createObjectURL(blob);
+                window.open(url, "_blank");
+            } else {
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.setAttribute("download", fileName);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            }
+        } catch (error) {
+            console.error("Brochure download failed:", error);
+
+            Swal.fire(
+                "Download Failed",
+                "Unable to download the course brochure. Please try again.",
+                "error"
+            );
         }
     };
 
@@ -759,11 +806,36 @@ const CourseModal = ({ showProgramModal, setShowProgramModal, editData, setEditD
                                                         <ErrorMessage name="venue" component="div" className="invalid-msg" />
                                                     </div>
 
-                                                    <div className="col-md-4 mb-3">
+                                                    <div className="col-md-6 mb-3">
                                                         <label className="form-label">No. of Nomination</label>
                                                         <Field className="form-control" name="noOfNomination" type="number" />
                                                         <ErrorMessage name="noOfNomination" component="div" className="invalid-msg" />
                                                     </div>
+
+                                                    <div className="col-md-6 mb-3">
+                                                        <label className="form-label">Brochure</label>
+                                                        {editData && editData.brochureName && (
+                                                            <div className="mb-2">
+                                                                <a
+                                                                    onClick={() => handleDownloadBrochure(editData)}
+                                                                    className="text-decoration-underline text-primary cursor-pointer"
+                                                                >
+                                                                    {editData.brochureName?.replace(/^\d+_/, "") || "Download Brochure"}
+                                                                </a>
+                                                            </div>
+                                                        )}
+                                                        <input
+                                                            type="file"
+                                                            className="form-control"
+                                                            accept=".pdf,.jpg,.jpeg,.png"
+                                                            onChange={(event) => {
+                                                                const file = event.currentTarget.files[0];
+                                                                setFieldValue("multipartFileBrochure", file);
+                                                            }}
+                                                        />
+                                                        <ErrorMessage name="multipartFileBrochure" component="div" className="invalid-msg" />
+                                                    </div>
+
 
                                                 </div>
 
